@@ -61,10 +61,15 @@ class User extends Authenticatable
         return $this->hasMany(Address::class);
     }
     public function coupons()
-{
-    return $this->belongsToMany(Coupon::class, 'coupon_user')
-        ->withPivot(['order_id', 'used_at']);
-}
+    {
+        return $this->belongsToMany(Coupon::class, 'coupon_user')
+            ->withPivot(['order_id', 'used_at']);
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
     /**
  * User has one wallet
  */

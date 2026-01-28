@@ -14,30 +14,17 @@ class OrderItemResource extends JsonResource
     {
         return [
             'id' => $this->id,
-
-            // Design info
-            'design' => $this->when($this->relationLoaded('design'), [
-                'id' => $this->design?->id,
-                'name' => $this->design?->name,
-                'images' => $this->design?->images->map(function ($image) {
-                    return [
-                        'id' => $image->id,
-                        'url' => asset('storage/' . $image->image_path),
-                        'is_primary' => $image->is_primary,
-                    ];
-                }),
-            ]),
-
-            // Quantity & Pricing
+            'design_id' => $this->design_id,
+            'design' => $this->when($this->relationLoaded('design'), function () {
+                return [
+                    'id' => $this->design->id,
+                    'name' => $this->design->name ?? null,
+                ];
+            }),
             'quantity' => $this->quantity,
             'unit_price' => (float) $this->unit_price,
             'total_price' => (float) $this->total_price,
-
-            // Design snapshot (at time of order)
-            'design_snapshot' => $this->when($this->design_snapshot, $this->design_snapshot),
-
-            // Timestamps
-            'created_at' => $this->created_at?->toISOString(),
+            'design_snapshot' => $this->design_snapshot,
         ];
     }
 }

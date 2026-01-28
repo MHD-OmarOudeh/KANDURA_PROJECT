@@ -3,7 +3,7 @@
 namespace App\Listeners;
 
 use App\Events\OrderCreated;
-use App\Models\Notification;
+use Illuminate\Support\Facades\Notification;
 
 class SendOrderCreatedNotification
 {
@@ -14,16 +14,10 @@ class SendOrderCreatedNotification
     {
         $order = $event->order;
 
-        // Create notification for user
-        Notification::create([
-            'user_id' => $order->user_id,
-            'title' => 'Order Created',
-            'message' => "Your order #{$order->order_number} has been created successfully. Total: {$order->total} SAR",
-            'type' => 'order',
-            'is_read' => false,
-        ]);
+        // Send notification to admin users (optional)
+        // You can implement this later based on your notification system
 
-        // TODO: Send email notification
-        // TODO: Send SMS notification
+        // Example: Notify user about order creation
+        // $order->user->notify(new \App\Notifications\OrderCreatedNotification($order));
     }
 }

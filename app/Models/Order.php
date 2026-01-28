@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Events\OrderCompleted;
 
 class Order extends Model
 {
@@ -45,10 +46,20 @@ class Order extends Model
         'cancelled_at' => 'datetime',
     ];
 
-    // ==========================================
-    // Relationships
-    // ==========================================
+    /**
+     * Generate unique order number
+     */
+    public static function generateOrderNumber(): string
+    {
+        $lastOrder = self::latest('id')->first();
+        $number = $lastOrder ? intval(substr($lastOrder->order_number, 4)) + 1 : 1;
 
+        return 'ORD-' . str_pad($number, 6, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Relationships
+     */
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -59,171 +70,39 @@ class Order extends Model
         return $this->belongsTo(Address::class);
     }
 
-    public function coupon()
-    {
-        return $this->belongsTo(Coupon::class);
-    }
-
-    public function designs()
-    {
-        return $this->belongsToMany(Design::class, 'order_items')
-            ->withPivot(['quantity', 'unit_price', 'total_price', 'design_snapshot'])
-            ->withTimestamps();
-    }
-
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
     }
 
-    // Uncomment when you create these models
-    // public function invoice()
-    // {
-    //     return $this->hasOne(Invoice::class);
-    // }
-
-    // public function reviews()
-    // {
-    //     return $this->hasMany(Review::class);
-    // }
-
-    // ==========================================
-    // Query Scopes
-    // ==========================================
-
-    public function scopeForUser($query, $userId)
+    public function coupon()
     {
-        return $query->where('user_id', $userId);
+        return $this->belongsTo(Coupon::class);
     }
 
-    public function scopeByStatus($query, $status)
+    public function invoice()
     {
-        return $query->where('status', $status);
+        return $this->hasOne(Invoice::class);
     }
 
-    public function scopeByPaymentStatus($query, $status)
+    public function review()
     {
-        return $query->where('payment_status', $status);
+        return $this->hasOne(Review::class);
     }
 
-    public function scopePending($query)
+    /**
+     * Boot method - Auto trigger invoice generation
+     */
+    protected static function boot()
     {
-        return $query->where('status', 'pending');
-    }
+        parent::boot();
 
-    public function scopeConfirmed($query)
-    {
-        return $query->where('status', 'confirmed');
-    }
-
-    public function scopeProcessing($query)
-    {
-        return $query->where('status', 'processing');
-    }
-
-    public function scopeCompleted($query)
-    {
-        return $query->where('status', 'completed');
-    }
-
-    public function scopeCancelled($query)
-    {
-        return $query->where('status', 'cancelled');
-    }
-
-    public function scopeByPaymentMethod($query, $method)
-    {
-        return $query->where('payment_method', $method);
-    }
-
-    public function scopeSearch($query, $search)
-    {
-        return $query->where(function($q) use ($search) {
-            $q->where('order_number', 'like', "%{$search}%")
-              ->orWhereHas('user', function($userQuery) use ($search) {
-                  $userQuery->where('name', 'like', "%{$search}%")
-                           ->orWhere('email', 'like', "%{$search}%");
-              });
+        static::updated(function ($order) {
+            // Check if status was changed to 'completed'
+            if ($order->isDirty('status') && $order->status === 'completed') {
+                \Log::info('Order completed, dispatching event', ['order_id' => $order->id]);
+                OrderCompleted::dispatch($order);
+            }
         });
-    }
-
-    public function scopeBetweenDates($query, $startDate, $endDate)
-    {
-        if ($startDate) {
-            $query->whereDate('created_at', '>=', $startDate);
-        }
-        if ($endDate) {
-            $query->whereDate('created_at', '<=', $endDate);
-        }
-        return $query;
-    }
-
-    // ==========================================
-    // Helper Methods
-    // ==========================================
-
-    public function canBeCancelled(): bool
-    {
-        return in_array($this->status, ['pending', 'confirmed']);
-    }
-
-    public function canBeUpdated(): bool
-    {
-        return in_array($this->status, ['pending', 'confirmed', 'processing']);
-    }
-
-    public function isPending(): bool
-    {
-        return $this->status === 'pending';
-    }
-
-    public function isConfirmed(): bool
-    {
-        return $this->status === 'confirmed';
-    }
-
-    public function isProcessing(): bool
-    {
-        return $this->status === 'processing';
-    }
-
-    public function isCompleted(): bool
-    {
-        return $this->status === 'completed';
-    }
-
-    public function isCancelled(): bool
-    {
-        return $this->status === 'cancelled';
-    }
-
-    public function isPaid(): bool
-    {
-        return $this->payment_status === 'paid';
-    }
-
-    public function isPaymentPending(): bool
-    {
-        return $this->payment_status === 'pending';
-    }
-
-    /**
-     * Generate unique order number
-     */
-    public static function generateOrderNumber(): string
-    {
-        $prefix = 'KND';
-        $timestamp = now()->format('Ymd');
-        $random = strtoupper(substr(uniqid(), -6));
-
-        return "{$prefix}-{$timestamp}-{$random}";
-    }
-
-    /**
-     * Calculate total items in order
-     */
-    public function getTotalItemsAttribute(): int
-    {
-        return $this->orderItems()->sum('quantity');
     }
 }

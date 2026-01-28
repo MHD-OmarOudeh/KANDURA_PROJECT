@@ -139,8 +139,11 @@ class OrderController extends Controller
                 $request->validated()['status']
             );
 
+            // Load invoice relationship after updating status
+            $updatedOrder->load(['invoice', 'user', 'address.city']);
+
             return $this->success(
-                new OrderResource($updatedOrder->load(['orderItems.design', 'address', 'user'])),
+                new OrderResource($updatedOrder),
                 'Order status updated successfully'
             );
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {

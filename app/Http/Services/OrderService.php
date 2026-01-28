@@ -276,19 +276,29 @@ public function __construct(PaymentService $paymentService)
     /**
      * Update order status
      */
-    public function updateOrderStatus(Order $order, string $newStatus): Order
+    public function updateOrderStatus(Order $order, string $status): Order
     {
-        $oldStatus = $order->status;
+        $order->status = $status;
 
-        $order->update([
-            'status' => $newStatus,
-            $this->getStatusTimestampField($newStatus) => now(),
-        ]);
+        // Set timestamp based on status
+        switch ($status) {
+            case 'confirmed':
+                $order->confirmed_at = now();
+                break;
+            case 'processing':
+                $order->processing_at = now();
+                break;
+            case 'completed':
+                $order->completed_at = now();
+                break;
+            case 'cancelled':
+                $order->cancelled_at = now();
+                break;
+        }
 
-        // Fire event
-        event(new OrderStatusChanged($order, $oldStatus, $newStatus));
+        $order->save();
 
-        return $order->fresh();
+        return $order;
     }
 
     /**

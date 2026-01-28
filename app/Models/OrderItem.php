@@ -25,10 +25,6 @@ class OrderItem extends Model
         'design_snapshot' => 'array',
     ];
 
-    // ==========================================
-    // Relationships
-    // ==========================================
-
     public function order()
     {
         return $this->belongsTo(Order::class);
@@ -37,17 +33,5 @@ class OrderItem extends Model
     public function design()
     {
         return $this->belongsTo(Design::class);
-    }
-
-    // ==========================================
-    // Helper Methods
-    // ==========================================
-
-    /**
-     * Calculate total price based on quantity and unit price
-     */
-    public function calculateTotalPrice(): float
-    {
-        return $this->quantity * $this->unit_price;
     }
 }

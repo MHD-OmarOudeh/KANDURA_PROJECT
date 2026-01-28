@@ -11,6 +11,8 @@ use App\Http\Controllers\Api\DesignOptionController;
 use App\Http\Controllers\Api\MeasurementController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\NotificationController;
 
 
 /*
@@ -115,5 +117,19 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/coupons/{coupon}/toggle', [CouponController::class, 'toggleStatus']);
         Route::get('/coupons/{coupon}/stats', [CouponController::class, 'stats']);
     });
+    // Review routes
+    Route::post('orders/{order}/review', [App\Http\Controllers\Api\ReviewController::class, 'store']);
+    Route::get('orders/{order}/review', [App\Http\Controllers\Api\ReviewController::class, 'show']);
+    Route::get('reviews', [App\Http\Controllers\Api\ReviewController::class, 'index']);
+    // Notification routes
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [App\Http\Controllers\Api\NotificationController::class, 'index']);
+        Route::get('/unread', [App\Http\Controllers\Api\NotificationController::class, 'unread']);
+        Route::put('/{id}/read', [App\Http\Controllers\Api\NotificationController::class, 'markAsRead']);
+        Route::put('/read-all', [App\Http\Controllers\Api\NotificationController::class, 'markAllAsRead']);
+        Route::delete('/{id}', [App\Http\Controllers\Api\NotificationController::class, 'destroy']);
+    });
+    Route::get('/notifications', [App\Http\Controllers\Api\NotificationController::class, 'index']);
+    Route::put('/notifications/{id}/read', [App\Http\Controllers\Api\NotificationController::class, 'markAsRead']);
 });
 Route::post('/webhooks/stripe', [PaymentController::class, 'stripeWebhook']);

@@ -17,18 +17,23 @@ class OrderResource extends JsonResource
             'order_number' => $this->order_number,
 
             // User info (only for admin)
-            'user' => $this->when(
-                $request->user() && $request->user()->hasPermissionTo('manage orders'),
-                [
-                    'id' => $this->user->id,
-                    'name' => $this->user->name,
-                    'email' => $this->user->email,
-                    'phone' => $this->user->phone,
-                ]
-            ),
+            'user' => [
+                'id' => $this->user_id,
+                'name' => $this->user->name ?? null,
+                'email' => $this->user->email ?? null,
+            ],
 
             // Address
-            'address' => new AddressResource($this->whenLoaded('address')),
+            'address' => $this->when($this->relationLoaded('address'), function () {
+                return [
+                    'id' => $this->address->id,
+                    'street' => $this->address->street,
+                    'city' => $this->address->city,
+                    'state' => $this->address->state,
+                    'country' => $this->address->country,
+                    'postal_code' => $this->address->postal_code,
+                ];
+            }),
 
             // Pricing
             'pricing' => [
@@ -42,72 +47,33 @@ class OrderResource extends JsonResource
             // Payment
             'payment_method' => $this->payment_method,
             'payment_status' => $this->payment_status,
-            'payment_status_label' => $this->getPaymentStatusLabel(),
-            'paid_at' => $this->paid_at?->toISOString(),
-
-            // Order Status
             'status' => $this->status,
-            'status_label' => $this->getStatusLabel(),
-
-            // Coupon (only if exists and loaded)
-            'coupon' => $this->when($this->relationLoaded('coupon') && $this->coupon, [
-                'code' => $this->coupon?->code,
-                'discount_percentage' => $this->coupon?->discount_percentage,
-            ]),
-
-            // Items
-            'items' => OrderItemResource::collection($this->whenLoaded('orderItems')),
-            'total_items' => $this->when(
-                $this->relationLoaded('orderItems'),
-                fn() => $this->orderItems->sum('quantity'),
-                0
-            ),
-
-            // Notes
             'notes' => $this->notes,
+            'paid_at' => $this->paid_at?->toIso8601String(),
+            'confirmed_at' => $this->confirmed_at?->toIso8601String(),
+            'processing_at' => $this->processing_at?->toIso8601String(),
+            'completed_at' => $this->completed_at?->toIso8601String(),
+            'cancelled_at' => $this->cancelled_at?->toIso8601String(),
+            'created_at' => $this->created_at->toIso8601String(),
+            'updated_at' => $this->updated_at->toIso8601String(),
 
-            // Timestamps
-            'timestamps' => [
-                'created_at' => $this->created_at?->toISOString(),
-                'confirmed_at' => $this->confirmed_at?->toISOString(),
-                'processing_at' => $this->processing_at?->toISOString(),
-                'completed_at' => $this->completed_at?->toISOString(),
-                'cancelled_at' => $this->cancelled_at?->toISOString(),
-            ],
+            // Invoice if exists
+            'invoice' => $this->when($this->invoice, function () {
+                return [
+                    'invoice_number' => $this->invoice->invoice_number,
+                    'total' => (float) $this->invoice->total,
+                    'pdf_url' => $this->invoice->pdf_url ? url($this->invoice->pdf_url) : null,
+                    'created_at' => $this->invoice->created_at->toIso8601String(),
+                ];
+            }),
 
-            // Actions (what user can do)
-            'can_cancel' => $this->canBeCancelled(),
-            'can_update' => $this->canBeUpdated(),
-            'can_pay' => $this->payment_status === 'pending',
+            // Review if exists
+            'review' => $this->when($this->relationLoaded('review') && $this->review, function () {
+                return [
+                    'rating' => $this->review->rating,
+                    'comment' => $this->review->comment,
+                ];
+            }),
         ];
-    }
-
-    /**
-     * Get human-readable status label
-     */
-    protected function getStatusLabel(): string
-    {
-        return match($this->status) {
-            'pending' => 'Pending',
-            'confirmed' => 'Confirmed',
-            'processing' => 'Processing',
-            'completed' => 'Completed',
-            'cancelled' => 'Cancelled',
-            default => ucfirst($this->status),
-        };
-    }
-
-    /**
-     * Get human-readable payment status label
-     */
-    protected function getPaymentStatusLabel(): string
-    {
-        return match($this->payment_status) {
-            'pending' => 'Payment Pending',
-            'paid' => 'Paid',
-            'failed' => 'Payment Failed',
-            'refunded' => 'Refunded',
-            default => ucfirst($this->payment_status),
-        };
     }
 }

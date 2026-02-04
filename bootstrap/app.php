@@ -23,19 +23,16 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
+
+        // Register Localization Middleware
+        $middleware->web(append: [
+            SetLocale::class,
+        ]);
+
+        $middleware->api(append: [
+            SetLocale::class,
+        ]);
     })
-
-    ->withMiddleware(function (Middleware $middleware) {
-    $middleware->web(append: [
-        SetLocale::class,
-    ]);
-
-
-    $middleware->api([
-        // هنا تحط الـ middleware الخاص بالـ api
-        SetLocale::class,
-    ]);
-})
 
     ->withExceptions(function (Exceptions $exceptions) {
         //

@@ -24,9 +24,9 @@ class User extends Authenticatable
         'email',
         'phone',
         'password',
-        'role',
         'profile_image',
         'is_active',
+        'preferred_locale',
     ];
     protected $guard_name = 'web';
     /**
@@ -96,7 +96,8 @@ public function getOrCreateWallet(): Wallet
         parent::boot();
 
         static::created(function ($user) {
-            if ($user->role === 'user' && !$user->hasRole('user')) {
+            // Assign default user role if no role assigned
+            if ($user->roles->isEmpty()) {
                 $user->assignRole('user');
             }
         });

@@ -8,6 +8,28 @@ use Illuminate\Http\Request;
 class NotificationController extends Controller
 {
     /**
+     * Update user's FCM token
+     * POST /api/update-fcm-token
+     */
+    public function updateFCMToken(Request $request)
+    {
+        try {
+            $request->validate([
+                'fcm_token' => 'required|string',
+            ]);
+
+            $user = $request->user();
+            $user->fcm_token = $request->fcm_token;
+            $user->save();
+
+            return $this->success(null, 'FCM token updated successfully');
+
+        } catch (\Exception $e) {
+            return $this->error('Failed to update FCM token', $e->getMessage(), 500);
+        }
+    }
+
+    /**
      * Get user notifications
      * GET /api/notifications
      */

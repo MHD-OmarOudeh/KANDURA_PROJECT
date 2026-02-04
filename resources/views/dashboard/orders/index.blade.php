@@ -301,6 +301,9 @@
         }
     </style>
 </head>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"></script>
+<script src="{{ asset('js/firebase-init.js') }}"></script>
 <body>
     <div class="header">
         <div class="header-content">

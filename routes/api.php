@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\LanguageController;
 
 
 /*
@@ -24,6 +25,14 @@ use App\Http\Controllers\Api\NotificationController;
 // ==========================================
 // Public routes (No authentication)
 // ==========================================
+
+// Language Routes
+Route::prefix('language')->group(function () {
+    Route::get('/', [LanguageController::class, 'index']);
+    Route::get('/current', [LanguageController::class, 'current']);
+    Route::post('/switch', [LanguageController::class, 'switch']);
+});
+
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
@@ -123,13 +132,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('reviews', [App\Http\Controllers\Api\ReviewController::class, 'index']);
     // Notification routes
     Route::prefix('notifications')->group(function () {
-        Route::get('/', [App\Http\Controllers\Api\NotificationController::class, 'index']);
-        Route::get('/unread', [App\Http\Controllers\Api\NotificationController::class, 'unread']);
-        Route::put('/{id}/read', [App\Http\Controllers\Api\NotificationController::class, 'markAsRead']);
-        Route::put('/read-all', [App\Http\Controllers\Api\NotificationController::class, 'markAllAsRead']);
-        Route::delete('/{id}', [App\Http\Controllers\Api\NotificationController::class, 'destroy']);
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::get('/unread', [NotificationController::class, 'unread']);
+        Route::put('/{id}/read', [NotificationController::class, 'markAsRead']);
+        Route::put('/read-all', [NotificationController::class, 'markAllAsRead']);
+        Route::delete('/{id}', [NotificationController::class, 'destroy']);
     });
-    Route::get('/notifications', [App\Http\Controllers\Api\NotificationController::class, 'index']);
-    Route::put('/notifications/{id}/read', [App\Http\Controllers\Api\NotificationController::class, 'markAsRead']);
+
+    // FCM Token management
+    Route::post('/update-fcm-token', [NotificationController::class, 'updateFCMToken']);
+
+    // Admin Test Notification Routes
+    Route::middleware('permission:manage orders')->prefix('admin')->group(function () {
+        Route::post('/test-notification', [App\Http\Controllers\Api\Admin\TestNotificationController::class, 'sendTestNotification']);
+        Route::post('/send-notification', [App\Http\Controllers\Api\Admin\TestNotificationController::class, 'sendCustomNotification']);
+        Route::post('/broadcast-notification', [App\Http\Controllers\Api\Admin\TestNotificationController::class, 'broadcastNotification']);
+    });
 });
+
 Route::post('/webhooks/stripe', [PaymentController::class, 'stripeWebhook']);

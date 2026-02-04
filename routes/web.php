@@ -8,6 +8,7 @@ use App\Http\Controllers\Dashboard\DesignController as DashboardDesignController
 use App\Http\Controllers\Dashboard\OrderController as DashboardOrderController;
 use App\Http\Controllers\Dashboard\CouponController as DashboardCouponController;
 use App\Http\Controllers\Dashboard\WalletController as DashboardWalletController;
+use App\Http\Controllers\Dashboard\AdminController as DashboardAdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -77,6 +78,26 @@ Route::prefix('dashboard')->name('dashboard.')->group(function () {
             Route::post('/wallet/deposit', [DashboardWalletController::class, 'deposit'])->name('wallet.deposit');
             Route::post('/wallet/withdraw', [DashboardWalletController::class, 'withdraw'])->name('wallet.withdraw');
         });
+
+        // Admin Management (Super Admin only)
+        Route::middleware('role:super_admin')->group(function () {
+            Route::resource('admins', DashboardAdminController::class)->names('admins');
+            Route::patch('/admins/{admin}/toggle', [DashboardAdminController::class, 'toggleStatus'])->name('admins.toggle');
+        });
+
+        // Firebase Notification Token (Dashboard users)
+        Route::post('/update-fcm-token', function(\Illuminate\Http\Request $request) {
+            $request->validate(['fcm_token' => 'required|string']);
+
+            $user = auth()->user();
+            if ($user) {
+                $user->fcm_token = $request->fcm_token;
+                $user->save();
+                return response()->json(['success' => true, 'message' => 'FCM token updated']);
+            }
+
+            return response()->json(['success' => false, 'message' => 'Not authenticated'], 401);
+        })->name('update-fcm-token');
 
     });
 });

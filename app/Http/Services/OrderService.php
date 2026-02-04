@@ -278,6 +278,7 @@ public function __construct(PaymentService $paymentService)
      */
     public function updateOrderStatus(Order $order, string $status): Order
     {
+        $oldStatus = $order->status;
         $order->status = $status;
 
         // Set timestamp based on status
@@ -297,6 +298,16 @@ public function __construct(PaymentService $paymentService)
         }
 
         $order->save();
+
+        // 🔔 Fire OrderStatusChanged event for notifications
+        if ($oldStatus !== $status) {
+            \Log::info('🔔 OrderService: Firing OrderStatusChanged event', [
+                'order_id' => $order->id,
+                'old_status' => $oldStatus,
+                'new_status' => $status
+            ]);
+            event(new OrderStatusChanged($order, $oldStatus, $status));
+        }
 
         return $order;
     }

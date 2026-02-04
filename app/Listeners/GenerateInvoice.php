@@ -5,7 +5,6 @@ namespace App\Listeners;
 use App\Events\OrderCompleted;
 use App\Models\Invoice;
 use App\Services\InvoiceService;
-use App\Notifications\InvoiceGeneratedNotification;
 use Illuminate\Support\Facades\Log;
 
 class GenerateInvoice
@@ -44,8 +43,7 @@ class GenerateInvoice
                 $invoice->update(['pdf_url' => $pdfPath]);
                 Log::info('PDF generated successfully', ['pdf_url' => $pdfPath]);
 
-                // Send notification to user
-                $order->user->notify(new InvoiceGeneratedNotification($invoice));
+                // Invoice generated successfully (no notification needed based on requirements)
             }
         } catch (\Exception $e) {
             Log::error('Failed to generate invoice', [

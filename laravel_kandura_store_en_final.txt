@@ -1,0 +1,353 @@
+Final Project Specification ­ Laravel Kandura Store
+ Introduction
+This document provides comprehensive and precise specifications for the Kandura Store project - an ecommerce system specialized in designing and selling traditional Kanduras. The project requires students to apply advanced Laravel knowledge, including database design, RESTful API development, and role-based access control implementation.
+1 Project Overview
+Objective
+Develop an integrated e-commerce system specialized in designing and selling customized Kanduras with advanced personalization capabilities.
+Target Audience
+Laravel course students - final project requiring implementation of best practices and professional standards.
+Core Focus
+Professional database design with complex relationships Comprehensive role-based access control system Secure and efficient RESTful API development Clean code following Laravel standards
+Scope
+Complete system including user interface, admin dashboard, database, and API.
+
+2 Core Entities
+
+User (User Account)
+
+Field id name email phone password role profile_image is_active email_verified_at created_at / updated_at
+
+Type
+
+Notes
+
+PK
+
+Unique user identifier
+
+string
+
+Full user name
+
+string
+
+Email address (unique)
+
+string
+
+Phone number
+
+string
+
+Encrypted password
+
+enum`( guest',`user',`admin',`super_admin') User role in system
+
+string
+
+Profile picture (optional)
+
+boolean
+
+Account active status
+
+timestamp
+
+Email verification date
+
+timestamps
+
+Creation and update timestamps
+
+Purpose: Store user account information and authentication credentials. Relationships:
+hasMany(Address) : User has multiple addresses hasMany(Measurement) : User has multiple measurements hasMany(Design) : User has multiple designs hasMany(Order) : User has multiple orders hasOne(Wallet) : User has one wallet hasMany(Review) : User can leave multiple reviews
+
+Order (Purchase Order)
+
+Field
+
+Type
+
+Notes
+
+id
+
+PK
+
+Unique order identifier
+
+user_id
+
+FK
+
+Order owner user ID
+
+address_id
+
+FK
+
+Delivery address ID
+
+total
+
+decimal(10,2)
+
+Order total amount
+
+payment_method enum`( cash',`wallet',`card')
+
+Payment method
+
+status
+
+enum`( pending',`confirmed',`processing',`completed',`cancelled')
+
+Current order status
+
+coupon_id
+
+FK
+
+Applied coupon ID (optional)
+
+notes
+
+text
+
+Additional notes
+
+created_at / updated_at
+
+timestamps
+
+Creation and update timestamps
+
+Purpose: Store order information and financial transactions. Relationships:
+belongsTo(User) : Order belongs to one user belongsTo(Address) : Order linked to one address belongsToMany(Design) : Order contains multiple designs hasOne(Invoice) : Order has one invoice hasMany(Review) : Order can have multiple reviews
+
+Address (Delivery Address)
+Represents user delivery addresses. Must contain complete delivery information (city, district, street, house number, etc.). Optional geographic information (Geo-location) for map integration.
+
+Purpose: Store multiple delivery addresses for each user. Relationships:
+belongsTo(User) : Address belongs to one user hasMany(Order) : Address can be linked to multiple orders
+Measurement (Body Measurements)
+Represents user body measurements (chest, waist, sleeve, shoulder, hip, height). Measurements can come from manual input or AI-based systems. Purpose: Store user measurements to facilitate design and customization process. Relationships:
+belongsTo(User) : Measurement belongs to one user hasMany(Design) : Measurement can be linked to multiple designs
+Design (Kandura Design)
+Represents customized Kandura design for user. Includes fabric type, color, quantity, and embroidery details. Each design can be part of multiple orders. Purpose: Store details of customized Kandura designs. Relationships:
+belongsTo(User) : Design belongs to one user belongsTo(Measurement) : Design linked to one measurement belongsToMany(Order) : Design can be part of multiple orders hasMany(DesignOptionSelection) : Design has selected options
+3 Advanced Entities
+DesignOption (Design Option)
+Represents general customization options available when designing Kandura (collar types, sleeve types, pocket styles, etc.). Managed by administration. Each option should have clear name, representative image, and active/inactive status. Purpose: Provide pre-defined set of customizable options.
+
+DesignOptionSelection (Option Selection)
+Represents actual user selections when designing Kandura. Links design to selected option. Can contain free-text value if option allows custom input. Purpose: Track selected options for each design.
+Wallet (Digital Wallet)
+User's digital wallet. Used to store balance for purchases or rewards. Must contain current balance and creation date. Purpose: Manage user's digital financial balance.
+WalletTransaction (Wallet Transaction)
+Records all wallet operations (deposit, withdraw, reward). Must contain operation type, amount, operation description, and timestamp. Purpose: Maintain detailed transaction log for review and audit purposes.
+Coupon (Discount Coupon)
+Discount code applicable during checkout. Contains code, discount percentage, expiration date, and activation status. Purpose: Provide flexible and manageable discount system.
+Invoice (Order Invoice)
+Detailed order invoice. Contains unique invoice number, total, tax, shipping, and PDF invoice link. Purpose: Generate and store official invoices for orders.
+Notification (System Notification)
+System alerts directed to users. Contains title, message, and read status. Purpose: Notify users of important events (order confirmation, shipment, etc.).
+Review (User Review)
+User reviews of products or services. Contains rating (1-5), comment, and status (approved/rejected). Purpose: Collect user feedback and improve service quality.
+
+4 Roles & Permissions
+Guest (Unregistered User)
+Unregistered visitor. Permissions:
+View homepage and products Register and login View contact information and terms
+User (Registered User)
+Registered user who makes purchases and designs. Permissions:
+Create, update, and delete profile Manage addresses (add, edit, delete) Manage measurements (add, edit, delete) Create, update, and delete designs View and create orders View wallet balance and transactions Leave reviews View notifications
+Admin (Administrator)
+Staff member managing orders and content. Permissions:
+View all users and disable/delete accounts View and change status of all orders View, edit, and delete all designs Manage coupons (create, edit, delete) Manage design options View and control reviews (approve/reject) Send notifications
+
+Manage wallet (add/withdraw balance)
+Super Admin (System Administrator)
+Top administrator with full system permissions. Permissions:
+All Admin permissions Manage other administrators (add, edit, delete) Manage system settings View reports and statistics Manage roles and permissions
+5 Laravel Core Components
+Service Layer
+Use service layer to separate business logic from controllers. Examples: OrderService , DesignService , WalletService .
+Events & Observers
+Use events and observers for interconnected operations. Example: When order is created, fire OrderCreated event to send notification.
+Queues & Jobs
+Use queues and jobs for time-consuming operations. Examples: Email sending, payment processing.
+API Resources
+Use API resources to format data when returning from API.
+Policies & Gates
+Use policies and gates for fine-grained access control. Example: Verify user is design owner before allowing edit.
+Query Scopes
+Use scopes to reuse repeated queries. Examples: ->active() , ->completed() .
+
+Validation Requests
+Use request classes to validate data in each Create/Update operation.
+
+Soft Deletes
+Use soft deletes to retain data after deletion, especially for users and orders.
+
+Pagination
+Display data in organized manner with pagination (e.g., 10 items per page).
+
+6 API Design
+Students must design and implement comprehensive RESTful API following best practices. All endpoints must be secured with authentication and authorization systems.
+
+Main Endpoints
+
+Users Method POST POST POST GET PUT GET DELETE
+
+Path /api/auth/register /api/auth/login /api/auth/logout /api/users/{id} /api/users/{id} /api/users /api/users/{id}
+
+Description Register new user User login User logout Get user data Update user data List all users Delete user
+
+Permissions Guest Guest User User (Self) User (Self) Admin Super Admin
+
+Addresses Method GET POST PUT DELETE GET
+
+Path /api/addresses /api/addresses /api/addresses/{id} /api/addresses/{id} /api/addresses/{id}
+
+Measurements
+
+Method
+
+Path
+
+GET
+
+/api/measurements
+
+POST
+
+/api/measurements
+
+PUT
+
+/api/measurements/{id}
+
+DELETE
+
+/api/measurements/{id}
+
+GET
+
+/api/measurements/{id}
+
+Designs Method GET POST PUT DELETE GET POST
+
+Path /api/designs /api/designs /api/designs/{id} /api/designs/{id} /api/designs/{id} /api/designs/{id}/options
+
+Description List user addresses Create new address Update address Delete address Get address details
+
+Permissions User User User (Owner) User (Owner) User (Owner)
+
+Description List user measurements Create new measurement Update measurement Delete measurement Get measurement details
+
+Permissions User User User (Owner) User (Owner) User (Owner)
+
+Description List user designs Create new design Update design Delete design Get design details Add options to design
+
+Permissions User User User (Owner) User (Owner) User (Owner) User (Owner)
+
+Orders Method GET POST GET PUT GET DELETE
+
+Path /api/orders /api/orders /api/orders/{id} /api/orders/{id}/status /api/orders /api/orders/{id}
+
+Wallet Method GET GET POST POST
+
+Path /api/wallet /api/wallet/transactions /api/wallet/deposit /api/wallet/withdraw
+
+Coupons Method POST GET POST PUT DELETE
+
+Path /api/coupons/validate /api/coupons /api/coupons /api/coupons/{id} /api/coupons/{id}
+
+Invoices Method GET GET GET
+
+Path /api/invoices/{id} /api/invoices/{id}/pdf /api/invoices
+
+Description List user orders Create new order Get order details Update order status List all orders Cancel order
+
+Permissions User User User (Owner) / Admin Admin Admin Admin
+
+Description Get wallet balance List wallet transactions Add balance Withdraw balance
+
+Permissions User User Admin Admin
+
+Description Validate coupon code List all coupons Create new coupon Update coupon Delete coupon
+
+Permissions User Admin Admin Admin Admin
+
+Description Get invoice Download invoice PDF List all invoices
+
+Permissions User (Owner) / Admin User (Owner) / Admin Admin
+
+Notifications
+
+Method
+
+Path
+
+GET
+
+/api/notifications
+
+PUT
+
+/api/notifications/{id}/read
+
+DELETE
+
+/api/notifications/{id}
+
+POST
+
+/api/notifications/send
+
+Description List user notifications Mark notification as read Delete notification Send notification
+
+Response Standards
+All responses must follow this format:
+
+{ "success": true, "message": "Operation completed successfully", "data": { // Required data }, "timestamp": "2025-11-02T10:30:00Z"
+}
+
+Error Handling
+Error Code 400 401 403 404 422 429 500
+
+Description Bad Request - Invalid data Unauthorized - Not authenticated Forbidden - No permission Not Found - Resource not found Unprocessable Entity - Validation error Too Many Requests - Rate limit exceeded Internal Server Error - Server error
+
+Authentication & Authorization
+All protected endpoints must require: Bearer Token: Obtained from POST /api/auth/login Header: Authorization: Bearer {token}
+
+Permissions User User User Admin
+
+JWT Expiration: Set expiration time (e.g., 24 hours) Refresh Token: For updating token without re-login
+Rate Limiting
+General: 60 requests per minute per IP Login: 5 attempts per minute API: 1000 requests per hour per user
+7 External Integrations
+Required Integrations:
+Payment Gateway: Implement secure payment system. Can use Stripe, Tabby, or Mada for Saudi Arabia. Notification System: Use Firebase or Twilio for email or SMS notifications.
+Optional Integrations:
+Cloud Storage: Use Cloudinary, AWS S3, or Bunny CDN for image and file storage. Data Import/Export: Support Excel or CSV import and export functionality. Maps: Support Google Maps or OpenStreetMap for address display on map.
+8 System Enhancements
+Caching
+Use Redis or Memcached to store repeated data (like options list) to improve performance.
+Rate Limiting
+Implement request limits per user to protect system from abuse.
+Localization
+Support Arabic and English languages throughout application.
+Responsive Design
+Interface viewable on all devices (mobile, tablet, desktop).
+
+Security
+Use HTTPS CSRF protection Input validation Sensitive data encryption
+Performance
+Database indexing Query optimization Eager Loading to avoid N+1 queries Image and file compression
+9 Expected Deliverables
+Students must submit following outputs: 1. Database with all tables and relationships mentioned. 2. Complete ERD (Entity-Relationship Diagram) showing relationships between all entities. 3. Integrated Admin and Super Admin Dashboard with user-friendly interface. 4. User/Guest Interface with professional responsive design. 5. Complete Roles & Permissions System implemented using Spatie. 6. Comprehensive RESTful API with all mentioned endpoints. 7. Clean and documented code following Laravel standards and best practices. 8. Optional: Advanced features like Excel import/export, Payment Integration, Cloud Uploads.
+Good luck with your project!
+
+

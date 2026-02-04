@@ -5,8 +5,10 @@ namespace App\Http\Services;
 use App\Models\Design;
 use App\Models\DesignImage;
 use App\Models\User;
+use App\Events\DesignCreated;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class DesignService
 {
@@ -91,7 +93,13 @@ class DesignService
                 $design->designOptions()->sync($data['design_options']);
             }
 
-            return $design->load(['images', 'measurements', 'designOptions', 'user']);
+            $design->load(['images', 'measurements', 'designOptions', 'user']);
+
+            // 🎨 Fire DesignCreated event for notifications
+            Log::info('🎨 DesignService: Firing DesignCreated event', ['design_id' => $design->id]);
+            event(new DesignCreated($design));
+
+            return $design;
         });
     }
 

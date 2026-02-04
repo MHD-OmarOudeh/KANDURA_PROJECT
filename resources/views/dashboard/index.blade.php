@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Dashboard - Kandura Store</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -135,7 +136,7 @@
         }
 
         .btn-logout {
-            padding: 8px 20px;
+            padding: 10px 24px;
             background: rgba(255, 255, 255, 0.15);
             border: 2px solid rgba(255, 255, 255, 0.8);
             border-radius: 8px;
@@ -146,6 +147,7 @@
             transition: all 0.3s ease;
             cursor: pointer;
             backdrop-filter: blur(10px);
+            font-family: 'Inter', sans-serif;
         }
 
         .btn-logout:hover {
@@ -153,6 +155,10 @@
             color: #667eea;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-logout:active {
+            transform: translateY(0);
         }
 
         /* Main Content */
@@ -533,8 +539,8 @@
     <div class="header">
         <div class="header-content">
             <div class="header-left">
-                <h1>Kandura Store Management</h1>
-                <p>Khaleeji Kandura Design & Customer Management</p>
+                <h1>{{ __('dashboard.kandura_store_management') }}</h1>
+                <p>{{ __('dashboard.khaleeji_kandura_design') }}</p>
             </div>
             <div class="header-right">
                 <!-- Language Dropdown -->
@@ -558,11 +564,12 @@
 
                 <div class="user-info">
                     <div class="user-name">{{ auth()->user()->name }}</div>
-                    <div class="user-role">Administrator</div>
+                    <div class="user-role">{{ __('dashboard.administrator') }}</div>
                 </div>
 
                 <form action="{{ route('dashboard.logout') }}" method="POST" style="display: inline;">
                     @csrf
+                    <button type="submit" class="logout-btn">{{ __('dashboard.logout') }}</button>
                     <button type="submit" class="btn-logout">Logout</button>
                 </form>
             </div>
@@ -573,8 +580,8 @@
     <div class="main-content">
         <!-- Dashboard Header -->
         <div class="dashboard-header">
-            <h2>Welcome to Kandura Store Dashboard</h2>
-            <p>Manage your Khaleeji Kandura designs, options, and customer operations</p>
+            <h2>{{ __('dashboard.kandura_store_management') }}</h2>
+            <p>{{ __('dashboard.khaleeji_kandura_design') }}</p>
         </div>
 
         <!-- Statistics Cards -->
@@ -583,9 +590,9 @@
             <div class="stat-card">
                 <div class="stat-header">
                     <div>
-                        <h3>Total Designs</h3>
+                        <h3>{{ __('dashboard.total_designs') }}</h3>
                         <div class="number">{{ \App\Models\Design::count() }}</div>
-                        <div class="description">Kandura designs</div>
+                        <div class="description">{{ __('dashboard.designs') }}</div>
                     </div>
                     <div class="stat-icon">👔</div>
                 </div>
@@ -596,9 +603,9 @@
             <div class="stat-card">
                 <div class="stat-header">
                     <div>
-                        <h3>Design Options</h3>
+                        <h3>{{ __('dashboard.design_options') }}</h3>
                         <div class="number">{{ \App\Models\DesignOption::count() }}</div>
-                        <div class="description">Colors, fabrics & styles</div>
+                        <div class="description">{{ __('dashboard.design_options') }}</div>
                     </div>
                     <div class="stat-icon">🎨</div>
                 </div>
@@ -609,9 +616,9 @@
             <div class="stat-card">
                 <div class="stat-header">
                     <div>
-                        <h3>Total Addresses</h3>
+                        <h3>{{ __('dashboard.addresses') }}</h3>
                         <div class="number">{{ \App\Models\Address::count() }}</div>
-                        <div class="description">Customer locations</div>
+                        <div class="description">{{ __('dashboard.addresses') }}</div>
                     </div>
                     <div class="stat-icon">📍</div>
                 </div>
@@ -621,7 +628,7 @@
             <div class="stat-card">
                 <div class="stat-header">
                     <div>
-                        <h3>Total Orders</h3>
+                        <h3>{{ __('dashboard.total_orders') }}</h3>
                         <div class="number">{{ \App\Models\Order::count() }}</div>
                         <div class="description">Customer orders</div>
                     </div>
@@ -655,7 +662,18 @@
             </div>
             @endcan
 
-
+            @if(auth()->user()->hasRole('super_admin'))
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <h3>Total Admins</h3>
+                        <div class="number">{{ \App\Models\User::role(['admin', 'super_admin'])->count() }}</div>
+                        <div class="description">System administrators</div>
+                    </div>
+                    <div class="stat-icon">🛡️</div>
+                </div>
+            </div>
+            @endif
 
             <div class="stat-card">
                 <div class="stat-header">
@@ -719,6 +737,15 @@
                 <p>Manage user wallets and transactions</p>
             </a>
             @endcan
+
+            @if(auth()->user()->hasRole('super_admin'))
+            <a href="{{ route('dashboard.admins.index') }}" class="action-card">
+                <div class="action-icon">🛡️</div>
+                <h3>Admins Management</h3>
+                <p>Manage system administrators and permissions</p>
+            </a>
+            @endif
+
             {{-- <a href="#" class="action-card">
                 <div class="action-icon">📊</div>
                 <h3>Reports</h3>
@@ -852,5 +879,10 @@
             }
         });
     </script>
+
+    <!-- Firebase Push Notifications -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"></script>
+    <script src="{{ asset('js/firebase-init.js') }}"></script>
 </body>
 </html>

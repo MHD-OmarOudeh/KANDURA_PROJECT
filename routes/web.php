@@ -48,7 +48,6 @@ Route::prefix('dashboard')->name('dashboard.')->group(function () {
 
         // Design Options
         Route::middleware('permission:manage design options')->group(function () {
-            Route::post('design-options/create', [DashboardDesignOptionController::class, 'store'])->name("design-options.create");
             Route::resource('design-options', DashboardDesignOptionController::class)->names('design-options');
         });
 
@@ -85,18 +84,27 @@ Route::prefix('dashboard')->name('dashboard.')->group(function () {
             Route::patch('/admins/{admin}/toggle', [DashboardAdminController::class, 'toggleStatus'])->name('admins.toggle');
         });
 
-        // Firebase Notification Token (Dashboard users)
+        // Firebase Notification Token (Dashboard users - Admin only)
         Route::post('/update-fcm-token', function(\Illuminate\Http\Request $request) {
             $request->validate(['fcm_token' => 'required|string']);
 
             $user = auth()->user();
-            if ($user) {
-                $user->fcm_token = $request->fcm_token;
-                $user->save();
-                return response()->json(['success' => true, 'message' => 'FCM token updated']);
+
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'Not authenticated'], 401);
             }
 
-            return response()->json(['success' => false, 'message' => 'Not authenticated'], 401);
+            // Only allow admins and super admins
+            if (!$user->hasAnyRole(['admin', 'super_admin'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'FCM notifications are only available for administrators'
+                ], 403);
+            }
+
+            $user->fcm_token = $request->fcm_token;
+            $user->save();
+            return response()->json(['success' => true, 'message' => 'FCM token updated']);
         })->name('update-fcm-token');
 
     });

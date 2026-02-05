@@ -22,7 +22,8 @@ class SendOrderCreatedNotification
             'order_number' => $order->order_number,
         ]);
 
-        // 1. Push notification to admins (Firebase + DB)
+        // 1. Send to ADMINS ONLY (Database + Firebase Push)
+        // FCM (Firebase Cloud Messaging) is ONLY for admins and super admins
         $admins = \App\Models\User::role(['admin', 'super_admin'])->get();
         foreach ($admins as $admin) {
             $admin->notify(new \App\Notifications\OrderNotification(
@@ -33,6 +34,7 @@ class SendOrderCreatedNotification
         }
         \Log::info('✅ Database notifications sent to admins', ['count' => $admins->count()]);
 
+        // Send FCM push notification to admins only (not users)
         $this->notificationService->sendToAdmins(
             'New Order Created',
             "A new order #{$order->order_number} has been created.",
@@ -43,9 +45,10 @@ class SendOrderCreatedNotification
                 'click_action' => '/dashboard/orders'
             ]
         );
-        \Log::info('📱 Push notification sent to admins');
+        \Log::info('📱 FCM push notification sent to admins ONLY');
 
-        // 2. DB notification only for design owners (NO push)
+        // 2. Send to design owners (Database notification ONLY, NO Firebase push)
+        // Regular users do NOT receive FCM notifications
         // Get unique design owners from order items
         $designOwnerIds = [];
         foreach ($order->orderItems as $item) {
@@ -60,7 +63,7 @@ class SendOrderCreatedNotification
                         "A new order has been placed for your design. Tap to view the order details.",
                         $order
                     ));
-                    \Log::info('✅ Database notification sent to design owner (no push)', [
+                    \Log::info('✅ Database notification sent to design owner (NO FCM push)', [
                         'design_owner_id' => $ownerId,
                         'design_id' => $item->design_id
                     ]);

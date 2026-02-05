@@ -99,6 +99,8 @@ public function getOrCreateWallet(): Wallet
             // Assign default user role if no role assigned
             if ($user->roles->isEmpty()) {
                 $user->assignRole('user');
+                // إنشاء محفظة فقط للمستخدمين العاديين
+                $user->wallet()->create(['balance' => 0]);
             }
         });
     }

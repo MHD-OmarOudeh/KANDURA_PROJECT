@@ -8,17 +8,27 @@ use Illuminate\Http\Request;
 class NotificationController extends Controller
 {
     /**
-     * Update user's FCM token
+     * Update user's FCM token (Admin & Super Admin only)
      * POST /api/update-fcm-token
      */
     public function updateFCMToken(Request $request)
     {
         try {
+            $user = $request->user();
+
+            // Only allow admins and super admins to update FCM token
+            if (!$user->hasAnyRole(['admin', 'super_admin'])) {
+                return $this->error(
+                    'Unauthorized',
+                    'FCM notifications are only available for administrators',
+                    403
+                );
+            }
+
             $request->validate([
                 'fcm_token' => 'required|string',
             ]);
 
-            $user = $request->user();
             $user->fcm_token = $request->fcm_token;
             $user->save();
 

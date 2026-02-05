@@ -84,8 +84,23 @@ class PaymentService
                 if ($paymentIntent->status === 'requires_confirmation') {
                     $paymentIntent = $paymentIntent->confirm();
                 }
+            } elseif (isset($paymentData['payment_method_id'])) {
+                // Create and confirm payment intent with payment method
+                $paymentIntent = PaymentIntent::create([
+                    'amount' => $order->total * 100, // Convert to cents
+                    'currency' => 'sar',
+                    'payment_method' => $paymentData['payment_method_id'],
+                    'confirm' => true, // Auto-confirm
+                    'description' => "Payment for order #{$order->order_number}",
+                    'metadata' => [
+                        'order_id' => $order->id,
+                        'order_number' => $order->order_number,
+                        'user_id' => $order->user_id,
+                    ],
+                    'return_url' => config('app.url') . '/payment/success', // Required for some payment methods
+                ]);
             } else {
-                // Create new payment intent
+                // Create new payment intent (requires client-side confirmation)
                 $paymentIntent = PaymentIntent::create([
                     'amount' => $order->total * 100, // Convert to cents
                     'currency' => 'sar',

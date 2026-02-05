@@ -82,7 +82,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}",
+              "raw": "{\n  \"email\": \"user@kandura.com\",\n  \"password\": \"password\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

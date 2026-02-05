@@ -133,9 +133,8 @@
         </div>
 
         <div class="card">
-            <form action="{{ route('design-options.create', $designOption) }} " method="POST" enctype="multipart/form-data">
+            <form action="{{ route('dashboard.design-options.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                @method('POST')
                 <div class="form-group">
                     <label for="name_en">Name (English) *</label>
                     <input type="text" id="name_en" name="name[en]" class="form-control" placeholder="e.g., White, Cotton" required>

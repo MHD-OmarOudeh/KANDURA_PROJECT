@@ -9,8 +9,11 @@ use App\Models\User;
 use App\Events\OrderCreated;
 use App\Events\OrderStatusChanged;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Http\Services\PaymentService;
+use Stripe\Refund;
+use Stripe\Stripe;
 
 
 class OrderService
@@ -21,6 +24,9 @@ protected PaymentService $paymentService;
 public function __construct(PaymentService $paymentService)
 {
     $this->paymentService = $paymentService;
+
+    // Initialize Stripe API
+    Stripe::setApiKey(config('services.stripe.secret'));
 }
 
 /**
@@ -274,11 +280,17 @@ public function __construct(PaymentService $paymentService)
     }
 
     /**
-     * Update order status
+     * Update order status with validation
      */
     public function updateOrderStatus(Order $order, string $status): Order
     {
         $oldStatus = $order->status;
+
+        // Validate status transition
+        if (!$this->isValidStatusTransition($oldStatus, $status)) {
+            throw new \Exception($this->getInvalidTransitionMessage($oldStatus, $status));
+        }
+
         $order->status = $status;
 
         // Set timestamp based on status
@@ -291,9 +303,64 @@ public function __construct(PaymentService $paymentService)
                 break;
             case 'completed':
                 $order->completed_at = now();
+
+                // Auto-mark cash payments as paid when order is completed
+                if ($order->payment_method === 'cash' && $order->payment_status === 'pending') {
+                    $order->payment_status = 'paid';
+                    $order->paid_at = now();
+                }
                 break;
             case 'cancelled':
                 $order->cancelled_at = now();
+
+                // Process refund based on payment method (if paid)
+                if ($order->payment_status === 'paid') {
+                    if ($order->payment_method === 'wallet') {
+                        // Wallet refund
+                        $wallet = $order->user->wallet;
+
+                        if ($wallet) {
+                            $wallet->refund(
+                                (float) $order->total,
+                                $order->id,
+                                "Refund for cancelled order {$order->order_number}"
+                            );
+
+                            $order->payment_status = 'refunded';
+
+                            Log::info('💰 OrderService: Wallet refund processed', [
+                                'order_id' => $order->id,
+                                'order_number' => $order->order_number,
+                                'amount' => $order->total,
+                                'user_id' => $order->user_id,
+                            ]);
+                        }
+                    } elseif ($order->payment_method === 'card' && $order->stripe_payment_intent_id) {
+                        // Stripe refund
+                        try {
+                            $refund = Refund::create([
+                                'payment_intent' => $order->stripe_payment_intent_id,
+                                'reason' => 'requested_by_customer',
+                            ]);
+
+                            $order->payment_status = 'refunded';
+
+                            Log::info('💳 OrderService: Stripe refund processed', [
+                                'order_id' => $order->id,
+                                'order_number' => $order->order_number,
+                                'amount' => $order->total,
+                                'refund_id' => $refund->id,
+                                'payment_intent_id' => $order->stripe_payment_intent_id,
+                            ]);
+                        } catch (\Exception $e) {
+                            Log::error('❌ OrderService: Stripe refund failed', [
+                                'order_id' => $order->id,
+                                'error' => $e->getMessage(),
+                            ]);
+                            throw new \Exception('Failed to process Stripe refund: ' . $e->getMessage());
+                        }
+                    }
+                }
                 break;
         }
 
@@ -301,7 +368,7 @@ public function __construct(PaymentService $paymentService)
 
         // 🔔 Fire OrderStatusChanged event for notifications
         if ($oldStatus !== $status) {
-            \Log::info('🔔 OrderService: Firing OrderStatusChanged event', [
+            Log::info('🔔 OrderService: Firing OrderStatusChanged event', [
                 'order_id' => $order->id,
                 'old_status' => $oldStatus,
                 'new_status' => $status
@@ -310,6 +377,51 @@ public function __construct(PaymentService $paymentService)
         }
 
         return $order;
+    }
+
+    /**
+     * Validate if status transition is allowed
+     */
+    protected function isValidStatusTransition(string $from, string $to): bool
+    {
+        // Same status - no change needed but not an error
+        if ($from === $to) {
+            return true;
+        }
+
+        // Define allowed transitions
+        $allowedTransitions = [
+            'pending' => ['confirmed', 'cancelled'],
+            'confirmed' => ['processing', 'cancelled'],
+            'processing' => ['completed', 'cancelled'],
+            'completed' => [], // Cannot change from completed
+            'cancelled' => [], // Cannot change from cancelled
+        ];
+
+        return in_array($to, $allowedTransitions[$from] ?? []);
+    }
+
+    /**
+     * Get error message for invalid transition
+     */
+    protected function getInvalidTransitionMessage(string $from, string $to): string
+    {
+        if ($from === 'completed') {
+            return 'Cannot change status of completed order';
+        }
+
+        if ($from === 'cancelled') {
+            return 'Cannot change status of cancelled order';
+        }
+
+        $validNextStatuses = match($from) {
+            'pending' => 'confirmed or cancelled',
+            'confirmed' => 'processing or cancelled',
+            'processing' => 'completed or cancelled',
+            default => 'unknown',
+        };
+
+        return "Cannot change order status from {$from} to {$to}. Valid next statuses: {$validNextStatuses}";
     }
 
     /**
@@ -335,6 +447,7 @@ public function __construct(PaymentService $paymentService)
             throw new \Exception('This order cannot be cancelled');
         }
 
+        // updateOrderStatus will handle wallet refund automatically
         return $this->updateOrderStatus($order, 'cancelled');
     }
 

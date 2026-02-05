@@ -31,10 +31,19 @@ class SendOrderStatusChangedNotification
 
         $message = $statusMessages[$newStatus] ?? "status changed to {$newStatus}";
 
+        // Add refund info based on payment method
+        if ($newStatus === 'cancelled' && $order->payment_status === 'refunded') {
+            if ($order->payment_method === 'wallet') {
+                $message .= ". Your wallet has been refunded " . number_format((float) $order->total, 2) . " SAR";
+            } elseif ($order->payment_method === 'card') {
+                $message .= ". Your card will be refunded " . number_format((float) $order->total, 2) . " SAR within 5-10 business days";
+            }
+        }
+
         // Store notification in database only (no push notification)
         $user->notify(new \App\Notifications\OrderNotification(
             'Order Status Updated',
-            "The status of your order #{$order->order_number} has been updated to {$newStatus}. Tap to view details",
+            "The status of your order #{$order->order_number} has been updated to {$newStatus}. {$message}. Tap to view details",
             $order
         ));
 

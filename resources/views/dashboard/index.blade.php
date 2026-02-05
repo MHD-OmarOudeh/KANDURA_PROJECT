@@ -569,7 +569,6 @@
 
                 <form action="{{ route('dashboard.logout') }}" method="POST" style="display: inline;">
                     @csrf
-                    <button type="submit" class="logout-btn">{{ __('dashboard.logout') }}</button>
                     <button type="submit" class="btn-logout">Logout</button>
                 </form>
             </div>
@@ -630,7 +629,7 @@
                     <div>
                         <h3>{{ __('dashboard.total_orders') }}</h3>
                         <div class="number">{{ \App\Models\Order::count() }}</div>
-                        <div class="description">Customer orders</div>
+                        <div class="description">{{ __('dashboard.customer_orders') }}</div>
                     </div>
                     <div class="stat-icon">📦</div>
                 </div>
@@ -641,9 +640,9 @@
             <div class="stat-card">
                 <div class="stat-header">
                     <div>
-                        <h3>Active Coupons</h3>
+                        <h3>{{ __('dashboard.active_coupons') }}</h3>
                         <div class="number">{{ \App\Models\Coupon::where('is_active', true)->count() }}</div>
-                        <div class="description">Discount coupons</div>
+                        <div class="description">{{ __('dashboard.discount_coupons') }}</div>
                     </div>
                     <div class="stat-icon">🎟️</div>
                 </div>
@@ -653,9 +652,9 @@
             <div class="stat-card">
                 <div class="stat-header">
                     <div>
-                        <h3>Total Wallet Balance</h3>
+                        <h3>{{ __('dashboard.total_wallet_balance') }}</h3>
                         <div class="number">{{ number_format(\App\Models\Wallet::sum('balance'), 2) }}</div>
-                        <div class="description">SAR</div>
+                        <div class="description">{{ __('dashboard.sar') }}</div>
                     </div>
                     <div class="stat-icon">💰</div>
                 </div>
@@ -666,9 +665,9 @@
             <div class="stat-card">
                 <div class="stat-header">
                     <div>
-                        <h3>Total Admins</h3>
+                        <h3>{{ __('dashboard.total_admins') }}</h3>
                         <div class="number">{{ \App\Models\User::role(['admin', 'super_admin'])->count() }}</div>
-                        <div class="description">System administrators</div>
+                        <div class="description">{{ __('dashboard.system_administrators') }}</div>
                     </div>
                     <div class="stat-icon">🛡️</div>
                 </div>
@@ -678,9 +677,9 @@
             <div class="stat-card">
                 <div class="stat-header">
                     <div>
-                        <h3>Total Users</h3>
+                        <h3>{{ __('dashboard.total_users') }}</h3>
                         <div class="number">{{ \App\Models\User::count() }}</div>
-                        <div class="description">Registered customers</div>
+                        <div class="description">{{ __('dashboard.registered_customers') }}</div>
                     </div>
                     <div class="stat-icon">👥</div>
                 </div>
@@ -688,61 +687,61 @@
         </div>
 
         <!-- Quick Actions -->
-        <h2 class="section-title">Quick Actions</h2>
+        <h2 class="section-title">{{ __('dashboard.quick_actions') }}</h2>
         <div class="actions-grid">
             @can('manage all designs')
             <a href="{{ route('dashboard.designs.index') }}" class="action-card">
                 <div class="action-icon">👔</div>
-                <h3>Kandura Designs</h3>
-                <p>View and manage all customer Kandura designs</p>
+                <h3>{{ __('dashboard.kandura_designs') }}</h3>
+                <p>{{ __('dashboard.view_manage_designs') }}</p>
             </a>
             @endcan
 
             @can('manage design options')
             <a href="{{ route('dashboard.design-options.index') }}" class="action-card">
                 <div class="action-icon">🎨</div>
-                <h3>Design Options</h3>
-                <p>Manage colors, dome types, fabrics, and sleeve styles</p>
+                <h3>{{ __('dashboard.design_options') }}</h3>
+                <p>{{ __('dashboard.manage_design_options_desc') }}</p>
             </a>
             @endcan
 
             @can('manage all addresses')
             <a href="{{ route('dashboard.addresses.index') }}" class="action-card">
                 <div class="action-icon">📍</div>
-                <h3>Customer Addresses</h3>
-                <p>Browse and manage delivery addresses</p>
+                <h3>{{ __('dashboard.customer_addresses') }}</h3>
+                <p>{{ __('dashboard.browse_manage_addresses') }}</p>
             </a>
             @endcan
             <!-- In Quick Actions Grid - Add after existing action cards -->
             @can('manage orders')
             <a href="{{ route('dashboard.orders.index') }}" class="action-card">
                 <div class="action-icon">📦</div>
-                <h3>Orders Management</h3>
-                <p>View, track and manage customer orders</p>
+                <h3>{{ __('dashboard.orders_management') }}</h3>
+                <p>{{ __('dashboard.view_track_orders') }}</p>
             </a>
             @endcan
 
             @can('manage coupons')
             <a href="{{ route('dashboard.coupons.index') }}" class="action-card">
                 <div class="action-icon">🎟️</div>
-                <h3>Coupons</h3>
-                <p>Create and manage discount coupons</p>
+                <h3>{{ __('dashboard.coupons') }}</h3>
+                <p>{{ __('dashboard.create_manage_coupons') }}</p>
             </a>
             @endcan
 
             @can('manage wallet')
             <a href="{{ route('dashboard.wallet.index') }}" class="action-card">
                 <div class="action-icon">💰</div>
-                <h3>Wallet Management</h3>
-                <p>Manage user wallets and transactions</p>
+                <h3>{{ __('dashboard.wallet_management') }}</h3>
+                <p>{{ __('dashboard.manage_user_wallets') }}</p>
             </a>
             @endcan
 
             @if(auth()->user()->hasRole('super_admin'))
             <a href="{{ route('dashboard.admins.index') }}" class="action-card">
                 <div class="action-icon">🛡️</div>
-                <h3>Admins Management</h3>
-                <p>Manage system administrators and permissions</p>
+                <h3>{{ __('dashboard.admins_management') }}</h3>
+                <p>{{ __('dashboard.manage_system_admins') }}</p>
             </a>
             @endif
 
@@ -762,7 +761,7 @@
         </div>
 
         <!-- Recent Activity -->
-        <h2 class="section-title">Recent Activity</h2>
+        <h2 class="section-title">{{ __('dashboard.recent_activity') }}</h2>
         <div class="activity-section">
             @php
                 $recentActivities = collect();
@@ -773,7 +772,7 @@
                     foreach ($recentDesigns as $design) {
                         $recentActivities->push([
                             'icon' => '👔',
-                            'text' => $design->user->name . ' created a new Kandura design',
+                            'text' => $design->user->name . ' ' . __('dashboard.created_new_kandura'),
                             'time' => $design->created_at->diffForHumans(),
                             'sort' => $design->created_at
                         ]);
@@ -786,7 +785,7 @@
                     foreach ($recentOptions as $option) {
                         $recentActivities->push([
                             'icon' => '🎨',
-                            'text' => 'New design option added: ' . $option->name,
+                            'text' => __('dashboard.new_design_option_added') . ': ' . $option->name,
                             'time' => $option->created_at->diffForHumans(),
                             'sort' => $option->created_at
                         ]);
@@ -799,7 +798,7 @@
                     foreach ($recentAddresses as $address) {
                         $recentActivities->push([
                             'icon' => '📍',
-                            'text' => $address->user->name . ' added a new delivery address',
+                            'text' => $address->user->name . ' ' . __('dashboard.added_new_address'),
                             'time' => $address->created_at->diffForHumans(),
                             'sort' => $address->created_at
                         ]);
@@ -812,7 +811,7 @@
                     foreach ($recentOrders as $order) {
                         $recentActivities->push([
                             'icon' => '📦',
-                            'text' => $order->user->name . ' placed order ' . $order->order_number,
+                            'text' => $order->user->name . ' ' . __('dashboard.placed_order') . ' ' . $order->order_number,
                             'time' => $order->created_at->diffForHumans(),
                             'sort' => $order->created_at
                         ]);
@@ -825,7 +824,7 @@
                     foreach ($recentCoupons as $coupon) {
                         $recentActivities->push([
                             'icon' => '🎟️',
-                            'text' => 'New coupon created: ' . $coupon->code,
+                            'text' => __('dashboard.new_coupon_created') . ': ' . $coupon->code,
                             'time' => $coupon->created_at->diffForHumans(),
                             'sort' => $coupon->created_at
                         ]);
@@ -851,7 +850,7 @@
             @else
             <div class="empty-state">
                 <div class="empty-state-icon">📭</div>
-                <p>No recent activity to display</p>
+                <p>{{ __('dashboard.no_recent_activity') }}</p>
             </div>
             @endif
         </div>
@@ -859,8 +858,8 @@
 
     <!-- Footer -->
     <div class="footer">
-        <p>&copy; 2025 Kandura Store - All Rights Reserved</p>
-        <p>Khaleeji Kandura Design & Management System</p>
+        <p>&copy; 2025 {{ __('dashboard.kandura_store_management') }} - {{ __('dashboard.all_rights_reserved') }}</p>
+        <p>{{ __('dashboard.khaleeji_kandura_design') }}</p>
     </div>
 
     <script>

@@ -129,6 +129,9 @@
         .status-completed { background: #e6f7ed; color: #27ae60; }
         .status-cancelled { background: #fdecea; color: #e74c3c; }
 
+        .status-paid { background: #e6f7ed; color: #27ae60; }
+        .status-refunded { background: #fef3c7; color: #92400e; }
+
         /* Items Table */
         table {
             width: 100%;
@@ -212,6 +215,50 @@
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            animation: slideIn 0.3s ease;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .status-note {
+            background: #e9f3ff;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            color: #3182ce;
+            margin-top: 10px;
+        }
+
+        .disabled-option {
+            color: #cbd5e0;
+        }
     </style>
 </head>
 <body>
@@ -223,6 +270,18 @@
     </div>
 
     <div class="main-content">
+        <!-- Success/Error Messages -->
+        @if(session('success'))
+        <div class="alert alert-success">
+            ✓ {{ session('success') }}
+        </div>
+        @endif
+
+        @if($errors->any())
+        <div class="alert alert-error">
+            ✗ {{ $errors->first() }}
+        </div>
+        @endif
         <!-- Order Header -->
         <div class="order-header">
             <div class="order-number">{{ $order->order_number }}</div>
@@ -241,7 +300,20 @@
                 </div>
                 <div class="meta-item">
                     <strong>Payment Status</strong>
-                    {{ ucfirst($order->payment_status) }}
+                    <span class="status-badge status-{{ $order->payment_status }}">
+                        {{ ucfirst($order->payment_status) }}
+                    </span>
+                    @if($order->payment_status === 'refunded')
+                        @if($order->payment_method === 'wallet')
+                        <small style="display: block; margin-top: 5px; color: #92400e;">
+                            💰 Refunded to wallet
+                        </small>
+                        @elseif($order->payment_method === 'card')
+                        <small style="display: block; margin-top: 5px; color: #1e40af;">
+                            💳 Refunded to card (5-10 days)
+                        </small>
+                        @endif
+                    @endif
                 </div>
             </div>
         </div>
@@ -354,27 +426,117 @@
                 <!-- Update Status -->
                 <div class="card" style="margin-top: 25px;">
                     <h2 class="card-title">⚙️ Update Status</h2>
+
+                    @php
+                        $availableStatuses = $order->getAvailableNextStatuses();
+                        $statusLabels = [
+                            'pending' => 'Pending',
+                            'confirmed' => 'Confirmed',
+                            'processing' => 'Processing',
+                            'completed' => 'Completed',
+                            'cancelled' => 'Cancelled'
+                        ];
+                    @endphp
+
+                    @if(!empty($availableStatuses) && $order->status !== 'completed' && $order->status !== 'cancelled')
                     <form action="{{ route('dashboard.orders.update-status', $order) }}" method="POST" class="status-form">
                         @csrf
                         @method('PUT')
                         <select name="status" required>
-                            <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>Pending</option>
-                            <option value="confirmed" {{ $order->status == 'confirmed' ? 'selected' : '' }}>Confirmed</option>
-                            <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>Processing</option>
-                            <option value="completed" {{ $order->status == 'completed' ? 'selected' : '' }}>Completed</option>
-                            <option value="cancelled" {{ $order->status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                            <option value="{{ $order->status }}" selected>
+                                {{ $statusLabels[$order->status] }} (Current)
+                            </option>
+                            @foreach($availableStatuses as $status)
+                                @if($status !== 'cancelled')
+                                <option value="{{ $status }}">
+                                    {{ $statusLabels[$status] }}
+                                </option>
+                                @endif
+                            @endforeach
                         </select>
                         <button type="submit" class="btn btn-primary">Update</button>
                     </form>
 
+                    <div class="status-note">
+                        💡 Available transitions:
+                        @foreach($availableStatuses as $index => $status)
+                            <strong>{{ $statusLabels[$status] }}</strong>{{ $index < count($availableStatuses) - 1 ? ', ' : '' }}
+                        @endforeach
+                    </div>
+                    @else
+                    <div class="status-note">
+                        ℹ️ This order is {{ $order->status }} and cannot be changed.
+                    </div>
+                    @endif
+
                     @if($order->canBeCancelled())
-                    <form action="{{ route('dashboard.orders.cancel', $order) }}" method="POST" style="margin-top: 10px;">
+                    <form action="{{ route('dashboard.orders.cancel', $order) }}" method="POST" style="margin-top: 15px;">
                         @csrf
-                        <button type="submit" class="btn btn-danger" onclick="return confirm('Cancel this order?')">
-                            Cancel Order
+                        @php
+                            $confirmMessage = 'Are you sure you want to cancel this order?';
+                            if ($order->payment_status === 'paid') {
+                                if ($order->payment_method === 'wallet') {
+                                    $confirmMessage .= '\n\n💰 The amount (' . number_format($order->total, 2) . ' SAR) will be refunded to the customer\'s wallet immediately.';
+                                } elseif ($order->payment_method === 'card') {
+                                    $confirmMessage .= '\n\n💳 The amount (' . number_format($order->total, 2) . ' SAR) will be refunded to the customer\'s card within 5-10 business days.';
+                                }
+                            }
+                        @endphp
+                        <button type="submit" class="btn btn-danger"
+                                onclick="return confirm('{{ $confirmMessage }}')">
+                            ❌ Cancel Order
                         </button>
                     </form>
+
+                    @if($order->payment_status === 'paid')
+                        @if($order->payment_method === 'wallet')
+                        <div class="status-note" style="background: #fef3c7; color: #92400e; margin-top: 10px;">
+                            💰 <strong>Wallet Refund:</strong> Cancelling this order will automatically refund {{ number_format($order->total, 2) }} SAR to the customer's wallet immediately.
+                        </div>
+                        @elseif($order->payment_method === 'card')
+                        <div class="status-note" style="background: #dbeafe; color: #1e40af; margin-top: 10px;">
+                            💳 <strong>Card Refund:</strong> Cancelling this order will automatically refund {{ number_format($order->total, 2) }} SAR to the customer's card. The refund will appear within 5-10 business days.
+                        </div>
+                        @endif
                     @endif
+                    @endif
+
+                    <!-- Status History -->
+                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <h3 style="font-size: 0.9em; color: #718096; margin-bottom: 10px;">📋 Status Timeline</h3>
+                        <div style="font-size: 0.85em;">
+                            @if($order->created_at)
+                            <div style="padding: 5px 0;">
+                                <span style="color: #718096;">Created:</span>
+                                <strong>{{ $order->created_at->format('d M Y, H:i') }}</strong>
+                            </div>
+                            @endif
+                            @if($order->confirmed_at)
+                            <div style="padding: 5px 0;">
+                                <span style="color: #718096;">Confirmed:</span>
+                                <strong>{{ $order->confirmed_at->format('d M Y, H:i') }}</strong>
+                            </div>
+                            @endif
+                            @if($order->processing_at)
+                            <div style="padding: 5px 0;">
+                                <span style="color: #718096;">Processing:</span>
+                                <strong>{{ $order->processing_at->format('d M Y, H:i') }}</strong>
+                            </div>
+                            @endif
+                            @if($order->completed_at)
+                            <div style="padding: 5px 0; color: #27ae60;">
+                                <span style="color: #718096;">Completed:</span>
+                                <strong>{{ $order->completed_at->format('d M Y, H:i') }}</strong>
+                            </div>
+                            @endif
+                            @if($order->cancelled_at)
+                            <div style="padding: 5px 0; color: #e74c3c;">
+                                <span style="color: #718096;">Cancelled:</span>
+                                <strong>{{ $order->cancelled_at->format('d M Y, H:i') }}</strong>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

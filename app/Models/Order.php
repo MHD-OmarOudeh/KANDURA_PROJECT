@@ -91,18 +91,35 @@ class Order extends Model
     }
 
     /**
-     * Boot method - Auto trigger invoice generation
+     * Get available next statuses for this order
      */
-    protected static function boot()
+    public function getAvailableNextStatuses(): array
     {
-        parent::boot();
+        return match($this->status) {
+            'pending' => ['confirmed', 'cancelled'],
+            'confirmed' => ['processing', 'cancelled'],
+            'processing' => ['completed', 'cancelled'],
+            'completed' => [],
+            'cancelled' => [],
+            default => [],
+        };
+    }
 
-        static::updated(function ($order) {
-            // Check if status was changed to 'completed'
-            if ($order->isDirty('status') && $order->status === 'completed') {
-                \Log::info('Order completed, dispatching event', ['order_id' => $order->id]);
-                OrderCompleted::dispatch($order);
-            }
-        });
+    /**
+     * Check if order can transition to given status
+     */
+    public function canTransitionTo(string $status): bool
+    {
+        return in_array($status, $this->getAvailableNextStatuses());
+    }
+
+    /**
+     * Check if order can be cancelled
+     */
+    public function canBeCancelled(): bool
+    {
+        return in_array($this->status, ['pending', 'confirmed', 'processing']);
     }
 }
+
+    

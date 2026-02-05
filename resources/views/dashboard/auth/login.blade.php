@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="UTF-8">
     <title>Login - Kandura Store</title>
@@ -92,13 +92,107 @@
             border: 1px solid #e53e3e;
             color: #742a2a;
         }
+
+        .language-switcher {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .language-dropdown {
+            position: relative;
+        }
+
+        .language-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            color: #667eea;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .language-btn:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .language-menu {
+            position: absolute;
+            top: 110%;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            min-width: 180px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .language-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .language-menu a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            color: #2d3748;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .language-menu a:hover {
+            background: #f7fafc;
+        }
+
+        .language-menu a.active {
+            background: #eef2ff;
+            color: #667eea;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
+    <!-- Language Switcher -->
+    <div class="language-switcher">
+        <div class="language-dropdown">
+            <button class="language-btn" onclick="toggleLanguage()">
+                <span>🌐</span>
+                <span>{{ strtoupper(app()->getLocale()) }}</span>
+                <span>▼</span>
+            </button>
+            <div class="language-menu" id="languageMenu">
+                <a href="{{ route('language.switch', 'en') }}" class="{{ app()->getLocale() == 'en' ? 'active' : '' }}">
+                    <span>🇬🇧</span>
+                    <span>English</span>
+                </a>
+                <a href="{{ route('language.switch', 'ar') }}" class="{{ app()->getLocale() == 'ar' ? 'active' : '' }}">
+                    <span>🇸🇦</span>
+                    <span>العربية</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
     <div class="login-container">
         <div class="logo">
-            <h1>Kandura Store</h1>
-            <p>Sign in to access your dashboard</p>
+            <h1>{{ __('dashboard.kandura_store_management') }}</h1>
+            <p>{{ __('dashboard.khaleeji_kandura_design') }}</p>
         </div>
 
         {{-- Success Message --}}
@@ -122,7 +216,7 @@
         <form action="{{ route('dashboard.login.post') }}" method="POST">
             @csrf
             <div class="form-group">
-                <label for="email">Email Address</label>
+                <label for="email">{{ __('dashboard.email') }}</label>
                 <input
                     type="email"
                     id="email"
@@ -135,7 +229,7 @@
             </div>
 
             <div class="form-group">
-                <label for="password">Password</label>
+                <label for="password">{{ __('dashboard.password') }}</label>
                 <input
                     type="password"
                     id="password"
@@ -151,8 +245,23 @@
                 <label for="remember" style="margin: 0; font-weight: 400;">Remember me</label>
             </div>
 
-            <button type="submit" class="btn-submit">Sign In</button>
+            <button type="submit" class="btn-submit">{{ __('dashboard.login') }}</button>
         </form>
     </div>
+
+    <script>
+        function toggleLanguage() {
+            const menu = document.getElementById('languageMenu');
+            menu.classList.toggle('active');
+        }
+
+        document.addEventListener('click', function(event) {
+            const dropdown = document.querySelector('.language-dropdown');
+            const menu = document.getElementById('languageMenu');
+            if (dropdown && !dropdown.contains(event.target)) {
+                menu.classList.remove('active');
+            }
+        });
+    </script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ app()->getLocale() }}">
+<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -191,20 +191,142 @@
         .btn-danger:hover {
             background: #f56565;
         }
+
+        .language-dropdown {
+            position: relative;
+        }
+
+        .language-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .language-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .language-menu {
+            position: absolute;
+            top: 110%;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            min-width: 180px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .language-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .language-menu a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            color: #2d3748;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .language-menu a:hover {
+            background: #f7fafc;
+        }
+
+        .language-menu a.active {
+            background: #eef2ff;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .header-left {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .back-btn {
+            padding: 8px 20px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
     </style>
 </head>
 <body>
     <header class="header">
         <div class="header-content">
-            <h1>Dashboard - Kandura Store</h1>
-            <a href="{{ route('dashboard.admins.index') }}" class="back-btn">Back to List</a>
+            <div class="header-left">
+                <h1>{{ __('dashboard.kandura_store_management') }}</h1>
+            </div>
+            <div class="header-right">
+                <div class="language-dropdown">
+                    <button class="language-btn" onclick="toggleLanguage()">
+                        <span>🌐</span>
+                        <span>{{ strtoupper(app()->getLocale()) }}</span>
+                        <span>▼</span>
+                    </button>
+                    <div class="language-menu" id="languageMenu">
+                        <a href="{{ route('language.switch', 'en') }}" class="{{ app()->getLocale() == 'en' ? 'active' : '' }}">
+                            <span>🇬🇧</span>
+                            <span>English</span>
+                        </a>
+                        <a href="{{ route('language.switch', 'ar') }}" class="{{ app()->getLocale() == 'ar' ? 'active' : '' }}">
+                            <span>🇸🇦</span>
+                            <span>العربية</span>
+                        </a>
+                    </div>
+                </div>
+                <a href="{{ route('dashboard.admins.index') }}" class="back-btn">{{ __('dashboard.admins') }}</a>
+            </div>
         </div>
     </header>
 
     <main class="main-content">
         <div class="page-header">
-            <h2 class="page-title">Admin Details</h2>
-            <a href="{{ route('dashboard.admins.edit', $admin->id) }}" class="btn btn-primary">Edit Admin</a>
+            <h2 class="page-title">{{ __('dashboard.admin_details') }}</h2>
+            <a href="{{ route('dashboard.admins.edit', $admin->id) }}" class="btn btn-primary">{{ __('dashboard.edit') }} {{ __('dashboard.admins') }}</a>
         </div>
 
         <div class="details-container">
@@ -294,5 +416,20 @@
             </div>
         </div>
     </main>
+
+    <script>
+        function toggleLanguage() {
+            const menu = document.getElementById('languageMenu');
+            menu.classList.toggle('active');
+        }
+
+        document.addEventListener('click', function(event) {
+            const dropdown = document.querySelector('.language-dropdown');
+            const menu = document.getElementById('languageMenu');
+            if (dropdown && !dropdown.contains(event.target)) {
+                menu.classList.remove('active');
+            }
+        });
+    </script>
 </body>
 </html>

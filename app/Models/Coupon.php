@@ -104,6 +104,14 @@ class Coupon extends Model
     // ==========================================
 
     /**
+     * Check if coupon has expired
+     */
+    public function isExpired(): bool
+    {
+        return $this->expires_at && $this->expires_at->lt(now());
+    }
+
+    /**
      * Check if coupon is currently valid
      */
     public function isValid(): bool

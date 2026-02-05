@@ -69,6 +69,33 @@ class PaymentController extends Controller
     }
 
     /**
+     * Create Stripe Checkout Session
+     * POST /api/orders/{order}/checkout-session
+     */
+    public function createCheckoutSession(Request $request, Order $order)
+    {
+        try {
+            $this->authorize('pay', $order);
+
+            if ($order->payment_method !== 'card') {
+                return $this->error('Checkout session is only for card payments', null, 400);
+            }
+
+            if ($order->payment_status === 'paid') {
+                return $this->error('Order is already paid', null, 400);
+            }
+
+            $result = $this->paymentService->createCheckoutSession($order);
+
+            return $this->success($result, 'Checkout session created successfully');
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return $this->forbidden('Unauthorized access');
+        } catch (\Exception $e) {
+            return $this->error('Failed to create checkout session', $e->getMessage(), 500);
+        }
+    }
+
+    /**
      * Webhook handler for Stripe
      * POST /api/webhooks/stripe
      */

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ app()->getLocale() }}">
+<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,6 +26,17 @@
             margin: 0 auto;
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-left {
+            flex: 1;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 15px;
             align-items: center;
         }
 
@@ -272,41 +283,125 @@
             font-weight: 600;
             margin-bottom: 15px;
         }
+
+        .language-dropdown {
+            position: relative;
+        }
+
+        .language-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .language-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .language-menu {
+            position: absolute;
+            top: 110%;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            min-width: 180px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .language-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .language-menu a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            color: #2d3748;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .language-menu a:hover {
+            background: #f7fafc;
+        }
+
+        .language-menu a.active {
+            background: #eef2ff;
+            color: #667eea;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="header-content">
-            <h1>🎟️ Coupons Management</h1>
-            <a href="{{ route('dashboard.index') }}" class="back-btn">← Back to Dashboard</a>
+            <div class="header-left">
+                <h1>🎫 {{ __('dashboard.coupons_management') }}</h1>
+            </div>
+            <div class="header-right">
+                <div class="language-dropdown">
+                    <button class="language-btn" onclick="toggleLanguage()">
+                        <span>🌐</span>
+                        <span>{{ strtoupper(app()->getLocale()) }}</span>
+                        <span>▼</span>
+                    </button>
+                    <div class="language-menu" id="languageMenu">
+                        <a href="{{ route('language.switch', 'en') }}" class="{{ app()->getLocale() == 'en' ? 'active' : '' }}">
+                            <span>🇬🇧</span>
+                            <span>English</span>
+                        </a>
+                        <a href="{{ route('language.switch', 'ar') }}" class="{{ app()->getLocale() == 'ar' ? 'active' : '' }}">
+                            <span>🇸🇦</span>
+                            <span>العربية</span>
+                        </a>
+                    </div>
+                </div>
+                <a href="{{ route('dashboard.index') }}" class="back-btn">← {{ __('dashboard.dashboard') }}</a>
+            </div>
         </div>
     </div>
 
     <div class="main-content">
         <div class="page-header">
             <div>
-                <h1>All Coupons</h1>
-                <p style="color: #718096; margin-top: 5px;">Create and manage discount coupons</p>
+                <h1>{{ __('dashboard.coupons') }}</h1>
+                <p style="color: #718096; margin-top: 5px;">{{ __('dashboard.create_manage_coupons') }}</p>
             </div>
-            <a href="{{ route('dashboard.coupons.create') }}" class="btn btn-primary">+ Create Coupon</a>
+            <a href="{{ route('dashboard.coupons.create') }}" class="btn btn-primary">+ {{ __('dashboard.create_coupon') }}</a>
         </div>
 
         <!-- Statistics -->
         <div class="stats-grid">
             <div class="stat-card" style="border-left-color: #3182ce;">
-                <h3>Total Coupons</h3>
+                <h3>{{ __('dashboard.total_coupons') }}</h3>
                 <div class="number">{{ $coupons->total() }}</div>
             </div>
             <div class="stat-card" style="border-left-color: #27ae60;">
-                <h3>Active</h3>
+                <h3>{{ __('dashboard.active') }}</h3>
                 <div class="number">{{ $coupons->where('is_active', true)->count() }}</div>
             </div>
             <div class="stat-card" style="border-left-color: #d68910;">
-                <h3>Percentage</h3>
+                <h3>{{ __('dashboard.percentage') }}</h3>
                 <div class="number">{{ $coupons->where('type', 'percentage')->count() }}</div>
             </div>
             <div class="stat-card" style="border-left-color: #764ba2;">
-                <h3>Fixed</h3>
+                <h3>{{ __('dashboard.fixed') }}</h3>
                 <div class="number">{{ $coupons->where('type', 'fixed')->count() }}</div>
             </div>
         </div>
@@ -316,7 +411,7 @@
             @foreach($coupons as $coupon)
             <div class="coupon-card">
                 @if($coupon->expires_at < now())
-                    <div class="expired-banner">⏰ EXPIRED</div>
+                    <div class="expired-banner">⏰ {{ __('dashboard.expired') }}</div>
                 @endif
 
                 <div class="coupon-header">
@@ -331,49 +426,57 @@
                 </div>
 
                 <div class="coupon-description">
-                    {{ $coupon->description ?? 'No description' }}
+                    {{ $coupon->description ?? __('dashboard.no_description') }}
                 </div>
 
                 <div class="coupon-info">
                     <div class="info-item">
-                        <span class="info-label">Uses</span>
+                        <span class="info-label">{{ __('dashboard.uses') }}</span>
                         <span class="info-value">
                             {{ $coupon->used_count }} / {{ $coupon->max_uses ?? '∞' }}
                         </span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Expires</span>
+                        <span class="info-label">{{ __('dashboard.expires') }}</span>
                         <span class="info-value">{{ $coupon->expires_at->format('d M Y') }}</span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Status</span>
+                        <span class="info-label">{{ __('dashboard.status') }}</span>
                         <span class="info-value {{ $coupon->is_active ? 'status-active' : 'status-inactive' }}">
-                            {{ $coupon->is_active ? 'Active' : 'Inactive' }}
+                            {{ $coupon->is_active ? __('dashboard.active') : __('dashboard.inactive') }}
                         </span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Min Order</span>
-                        <span class="info-value">{{ $coupon->min_order_amount ?? 'None' }}</span>
+                        <span class="info-label">{{ __('dashboard.min_order') }}</span>
+                        <span class="info-value">{{ $coupon->min_order_amount ?? __('dashboard.none') }}</span>
                     </div>
                 </div>
 
                 <div class="coupon-actions">
-                    <a href="{{ route('dashboard.coupons.edit', $coupon) }}" class="action-btn btn-edit">Edit</a>
+                    <a href="{{ route('dashboard.coupons.edit', $coupon) }}" class="action-btn btn-edit">{{ __('dashboard.edit') }}</a>
 
-                    <form action="{{ route('dashboard.coupons.toggle', $coupon) }}" method="POST" style="flex: 1;">
-                        @csrf
-                        @method('PATCH')
-                        <button type="submit" class="action-btn btn-toggle" style="width: 100%;">
-                            {{ $coupon->is_active ? 'Deactivate' : 'Activate' }}
-                        </button>
-                    </form>
+                    @if($coupon->expires_at >= now())
+                        <form action="{{ route('dashboard.coupons.toggle', $coupon) }}" method="POST" style="flex: 1;">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="action-btn btn-toggle" style="width: 100%;">
+                                {{ $coupon->is_active ? __('dashboard.deactivate') : __('dashboard.activate') }}
+                            </button>
+                        </form>
+                    @else
+                        <div style="flex: 1;">
+                            <button type="button" class="action-btn" style="width: 100%; background: #e2e8f0; color: #94a3b8; cursor: not-allowed; pointer-events: none;" disabled>
+                                {{ __('dashboard.inactive') }}
+                            </button>
+                        </div>
+                    @endif
 
                     <form action="{{ route('dashboard.coupons.destroy', $coupon) }}" method="POST" style="flex: 1;">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="action-btn btn-delete"
-                                onclick="return confirm('Delete this coupon?')" style="width: 100%;">
-                            Delete
+                                onclick="return confirm('{{ __('dashboard.delete_coupon_confirm') }}')" style="width: 100%;">
+                            {{ __('dashboard.delete') }}
                         </button>
                     </form>
                 </div>
@@ -393,5 +496,20 @@
             {{ $coupons->links() }}
         </div>
     </div>
+
+    <script>
+        function toggleLanguage() {
+            const menu = document.getElementById('languageMenu');
+            menu.classList.toggle('active');
+        }
+
+        document.addEventListener('click', function(event) {
+            const dropdown = document.querySelector('.language-dropdown');
+            const menu = document.getElementById('languageMenu');
+            if (dropdown && !dropdown.contains(event.target)) {
+                menu.classList.remove('active');
+            }
+        });
+    </script>
 </body>
 </html>

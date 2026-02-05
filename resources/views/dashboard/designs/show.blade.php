@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -33,6 +33,69 @@
             border-bottom-color: var(--primary) !important;
             color: var(--primary) !important;
         }
+
+        .language-dropdown {
+            position: relative;
+        }
+
+        .language-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .language-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .language-menu {
+            position: absolute;
+            top: 110%;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            min-width: 180px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .language-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .language-menu a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            color: #2d3748;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .language-menu a:hover {
+            background: #f7fafc;
+        }
+
+        .language-menu a.active {
+            background: #eef2ff;
+            color: #667eea;
+            font-weight: 600;
+        }
     </style>
 </head>
 
@@ -49,10 +112,27 @@
                                   d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                         </svg>
                     </a>
-                    <h1 class="text-xl font-bold">Design Details</h1>
+                    <h1 class="text-xl font-bold">{{ __('dashboard.design_details') }}</h1>
                 </div>
 
                 <div class="flex items-center gap-4">
+                    <div class="language-dropdown">
+                        <button class="language-btn" onclick="toggleLanguage()">
+                            <span>🌐</span>
+                            <span>{{ strtoupper(app()->getLocale()) }}</span>
+                            <span>▼</span>
+                        </button>
+                        <div class="language-menu" id="languageMenu">
+                            <a href="{{ route('language.switch', 'en') }}" class="{{ app()->getLocale() == 'en' ? 'active' : '' }}">
+                                <span>🇬🇧</span>
+                                <span>English</span>
+                            </a>
+                            <a href="{{ route('language.switch', 'ar') }}" class="{{ app()->getLocale() == 'ar' ? 'active' : '' }}">
+                                <span>🇸🇦</span>
+                                <span>العربية</span>
+                            </a>
+                        </div>
+                    </div>
                     <span>{{ auth()->user()->name }}</span>
                     <form action="{{ route('dashboard.logout') }}" method="POST">
                         @csrf
@@ -269,6 +349,21 @@ function showTab(tab) {
     document.getElementById('tab-' + tab).classList.add('tab-active');
     document.getElementById('content-' + tab).classList.remove('hidden');
 }
+</script>
+
+<script>
+    function toggleLanguage() {
+        const menu = document.getElementById('languageMenu');
+        menu.classList.toggle('active');
+    }
+
+    document.addEventListener('click', function(event) {
+        const dropdown = document.querySelector('.language-dropdown');
+        const menu = document.getElementById('languageMenu');
+        if (dropdown && !dropdown.contains(event.target)) {
+            menu.classList.remove('active');
+        }
+    });
 </script>
 
 </body>

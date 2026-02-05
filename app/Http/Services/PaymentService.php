@@ -185,6 +185,25 @@ class PaymentService
      */
     public function handleStripeWebhook(array $payload): void
     {
+        $eventType = $payload['type'];
+
+        switch ($eventType) {
+            case 'payment_intent.succeeded':
+            case 'payment_intent.payment_failed':
+                $this->handlePaymentIntentWebhook($payload);
+                break;
+
+            case 'checkout.session.completed':
+                $this->handleCheckoutSessionCompleted($payload);
+                break;
+        }
+    }
+
+    /**
+     * Handle Payment Intent webhook
+     */
+    protected function handlePaymentIntentWebhook(array $payload): void
+    {
         $paymentIntent = $payload['data']['object'];
 
         $order = Order::where('stripe_payment_intent_id', $paymentIntent['id'])->first();
@@ -290,5 +309,127 @@ class PaymentService
             'client_secret' => $paymentIntent->client_secret,
             'payment_intent_id' => $paymentIntent->id,
         ];
+    }
+
+    /**
+     * Create Stripe Checkout Session (Alternative payment flow)
+     */
+    public function createCheckoutSession(Order $order): array
+    {
+        try {
+            // Load order items with design
+            $order->load(['orderItems.design']);
+
+            // Prepare line items
+            $lineItems = [];
+
+            foreach ($order->orderItems as $item) {
+                $productData = [
+                    'name' => $item->design->name['en'] ?? $item->design->name['ar'] ?? 'Kandura Design',
+                ];
+
+                // Only add description if not empty
+                $description = $item->design->description['en'] ?? $item->design->description['ar'] ?? null;
+                if (!empty($description)) {
+                    $productData['description'] = $description;
+                }
+
+                $lineItems[] = [
+                    'price_data' => [
+                        'currency' => 'sar',
+                        'product_data' => $productData,
+                        'unit_amount' => (int)($item->unit_price * 100), // Convert to cents
+                    ],
+                    'quantity' => $item->quantity,
+                ];
+            }
+
+            // Determine redirect URLs based on environment
+            $baseUrl = config('app.url');
+            $successUrl = $baseUrl . '/payment/success?session_id={CHECKOUT_SESSION_ID}&order_id=' . $order->id;
+            $cancelUrl = $baseUrl . '/payment/cancel?order_id=' . $order->id;
+
+            // Create Checkout Session
+            $session = \Stripe\Checkout\Session::create([
+                'payment_method_types' => ['card'],
+                'line_items' => $lineItems,
+                'mode' => 'payment',
+                'success_url' => $successUrl,
+                'cancel_url' => $cancelUrl,
+                'customer_email' => $order->user->email,
+                'client_reference_id' => $order->order_number,
+                'metadata' => [
+                    'order_id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'user_id' => $order->user_id,
+                ],
+                'expires_at' => now()->addMinutes(30)->timestamp, // Session expires in 30 minutes
+            ]);
+
+            // Update order with session ID
+            $order->update([
+                'stripe_payment_intent_id' => $session->id, // Store session ID
+            ]);
+
+            return [
+                'success' => true,
+                'session_id' => $session->id,
+                'session_url' => $session->url,
+                'expires_at' => now()->addMinutes(30)->toISOString(),
+            ];
+        } catch (\Exception $e) {
+            throw new \Exception('Failed to create checkout session: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Create Stripe coupon for discount
+     */
+    protected function createStripeCoupon(Order $order): string
+    {
+        try {
+            $coupon = \Stripe\Coupon::create([
+                'amount_off' => $order->discount * 100, // Convert to cents
+                'currency' => 'sar',
+                'duration' => 'once',
+                'name' => 'Order Discount - ' . $order->order_number,
+            ]);
+
+            return $coupon->id;
+        } catch (\Exception $e) {
+            // If coupon creation fails, continue without discount
+            return '';
+        }
+    }
+
+    /**
+     * Handle Stripe Checkout Session completed webhook
+     */
+    public function handleCheckoutSessionCompleted(array $payload): void
+    {
+        $session = $payload['data']['object'];
+
+        $order = Order::where('stripe_payment_intent_id', $session['id'])->first();
+
+        if (!$order) {
+            // Try finding by order_id in metadata
+            $orderId = $session['metadata']['order_id'] ?? null;
+            if ($orderId) {
+                $order = Order::find($orderId);
+            }
+        }
+
+        if (!$order) {
+            return;
+        }
+
+        if ($session['payment_status'] === 'paid') {
+            $order->update([
+                'payment_status' => 'paid',
+                'paid_at' => now(),
+                'status' => 'confirmed',
+                'confirmed_at' => now(),
+            ]);
+        }
     }
 }

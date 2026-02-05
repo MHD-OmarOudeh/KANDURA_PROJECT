@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ app()->getLocale() }}">
+<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -200,19 +200,141 @@
         .required {
             color: #e53e3e;
         }
+
+        .language-dropdown {
+            position: relative;
+        }
+
+        .language-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .language-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .language-menu {
+            position: absolute;
+            top: 110%;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            min-width: 180px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .language-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .language-menu a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            color: #2d3748;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .language-menu a:hover {
+            background: #f7fafc;
+        }
+
+        .language-menu a.active {
+            background: #eef2ff;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .header-left {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .back-btn {
+            padding: 8px 20px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
     </style>
 </head>
 <body>
     <header class="header">
         <div class="header-content">
-            <h1>Dashboard - Kandura Store</h1>
-            <a href="{{ route('dashboard.admins.index') }}" class="back-btn">Back to List</a>
+            <div class="header-left">
+                <h1>{{ __('dashboard.kandura_store_management') }}</h1>
+            </div>
+            <div class="header-right">
+                <div class="language-dropdown">
+                    <button class="language-btn" onclick="toggleLanguage()">
+                        <span>🌐</span>
+                        <span>{{ strtoupper(app()->getLocale()) }}</span>
+                        <span>▼</span>
+                    </button>
+                    <div class="language-menu" id="languageMenu">
+                        <a href="{{ route('language.switch', 'en') }}" class="{{ app()->getLocale() == 'en' ? 'active' : '' }}">
+                            <span>🇬🇧</span>
+                            <span>English</span>
+                        </a>
+                        <a href="{{ route('language.switch', 'ar') }}" class="{{ app()->getLocale() == 'ar' ? 'active' : '' }}">
+                            <span>🇸🇦</span>
+                            <span>العربية</span>
+                        </a>
+                    </div>
+                </div>
+                <a href="{{ route('dashboard.admins.index') }}" class="back-btn">{{ __('dashboard.admins') }}</a>
+            </div>
         </div>
     </header>
 
     <main class="main-content">
         <div class="page-header">
-            <h2 class="page-title">Add New Admin</h2>
+            <h2 class="page-title">{{ __('dashboard.add_new') }} {{ __('dashboard.admins') }}</h2>
         </div>
 
         @if($errors->any())
@@ -231,7 +353,7 @@
                 @csrf
 
                 <div class="form-group">
-                    <label for="name">Name <span class="required">*</span></label>
+                    <label for="name">{{ __('dashboard.name') }} <span class="required">*</span></label>
                     <input type="text" id="name" name="name" value="{{ old('name') }}" required>
                     @error('name')
                         <div class="error">{{ $message }}</div>
@@ -239,7 +361,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="email">Email <span class="required">*</span></label>
+                    <label for="email">{{ __('dashboard.email') }} <span class="required">*</span></label>
                     <input type="email" id="email" name="email" value="{{ old('email') }}" required>
                     @error('email')
                         <div class="error">{{ $message }}</div>
@@ -247,7 +369,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="phone">Phone <span class="required">*</span></label>
+                    <label for="phone">{{ __('dashboard.phone') }} <span class="required">*</span></label>
                     <input type="text" id="phone" name="phone" value="{{ old('phone') }}" required>
                     @error('phone')
                         <div class="error">{{ $message }}</div>
@@ -255,7 +377,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="password">Password <span class="required">*</span></label>
+                    <label for="password">{{ __('dashboard.password') }} <span class="required">*</span></label>
                     <input type="password" id="password" name="password" required>
                     @error('password')
                         <div class="error">{{ $message }}</div>
@@ -263,14 +385,14 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="password_confirmation">Confirm Password <span class="required">*</span></label>
+                    <label for="password_confirmation">{{ __('dashboard.confirm_password') }} <span class="required">*</span></label>
                     <input type="password" id="password_confirmation" name="password_confirmation" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="role">Role <span class="required">*</span></label>
+                    <label for="role">{{ __('dashboard.role') }} <span class="required">*</span></label>
                     <select id="role" name="role" required onchange="togglePermissions()">
-                        <option value="">Select Role</option>
+                        <option value="">{{ __('dashboard.select_role') }}</option>
                         @foreach($roles as $role)
                             <option value="{{ $role->name }}" {{ old('role') == $role->name ? 'selected' : '' }}>
                                 {{ $role->name == 'super_admin' ? 'Super Admin' : 'Admin' }}
@@ -285,16 +407,16 @@
                 <div class="form-group">
                     <div class="checkbox-group">
                         <input type="checkbox" id="is_active" name="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }}>
-                        <label for="is_active" style="margin: 0;">Active</label>
+                        <label for="is_active" style="margin: 0;">{{ __('dashboard.active') }}</label>
                     </div>
                 </div>
 
                 @if($allPermissions && $allPermissions->count() > 0)
                 <div class="permissions-section" id="permissionsSection" style="display: none;">
-                    <h3>Permissions</h3>
+                    <h3>{{ __('dashboard.permissions') }}</h3>
                     <div style="margin-bottom: 15px;">
-                        <button type="button" class="btn btn-secondary" onclick="selectAllPermissions()" style="padding: 8px 16px; font-size: 14px;">Select All</button>
-                        <button type="button" class="btn btn-secondary" onclick="deselectAllPermissions()" style="padding: 8px 16px; font-size: 14px; margin-left: 10px;">Deselect All</button>
+                        <button type="button" class="btn btn-secondary" onclick="selectAllPermissions()" style="padding: 8px 16px; font-size: 14px;">{{ __('dashboard.select_all') }}</button>
+                        <button type="button" class="btn btn-secondary" onclick="deselectAllPermissions()" style="padding: 8px 16px; font-size: 14px; margin-left: 10px;">{{ __('dashboard.deselect_all') }}</button>
                     </div>
                     <div class="permissions-grid">
                         @foreach($allPermissions as $permission)
@@ -315,8 +437,8 @@
                 @endif
 
                 <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Save</button>
-                    <a href="{{ route('dashboard.admins.index') }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">{{ __('dashboard.save') }}</button>
+                    <a href="{{ route('dashboard.admins.index') }}" class="btn btn-secondary">{{ __('dashboard.cancel') }}</a>
                 </div>
             </form>
         </div>
@@ -326,7 +448,7 @@
         function togglePermissions() {
             const roleSelect = document.getElementById('role');
             const permissionsSection = document.getElementById('permissionsSection');
-            
+
             if (roleSelect.value === 'admin') {
                 permissionsSection.style.display = 'block';
             } else {
@@ -349,6 +471,19 @@
         // Check on page load if role is already selected
         document.addEventListener('DOMContentLoaded', function() {
             togglePermissions();
+        });
+
+        function toggleLanguage() {
+            const menu = document.getElementById('languageMenu');
+            menu.classList.toggle('active');
+        }
+
+        document.addEventListener('click', function(event) {
+            const dropdown = document.querySelector('.language-dropdown');
+            const menu = document.getElementById('languageMenu');
+            if (dropdown && !dropdown.contains(event.target)) {
+                menu.classList.remove('active');
+            }
         });
     </script>
 </body>

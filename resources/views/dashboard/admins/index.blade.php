@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ app()->getLocale() }}">
+<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() == 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,6 +27,18 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 20px;
+        }
+
+        .header-left {
+            flex: 1;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
         }
 
         .back-btn {
@@ -298,20 +310,142 @@
             color: #718096;
             font-size: 18px;
         }
+
+        .language-dropdown {
+            position: relative;
+        }
+
+        .language-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .language-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .language-menu {
+            position: absolute;
+            top: 110%;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            min-width: 180px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .language-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .language-menu a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            color: #2d3748;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .language-menu a:hover {
+            background: #f7fafc;
+        }
+
+        .language-menu a.active {
+            background: #eef2ff;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .header-left {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .back-btn {
+            padding: 8px 20px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
     </style>
 </head>
 <body>
     <header class="header">
         <div class="header-content">
-            <h1>Dashboard - Kandura Store</h1>
-            <a href="{{ route('dashboard.index') }}" class="back-btn">Back to Dashboard</a>
+            <div class="header-left">
+                <h1>{{ __('dashboard.kandura_store_management') }}</h1>
+            </div>
+            <div class="header-right">
+                <div class="language-dropdown">
+                    <button class="language-btn" onclick="toggleLanguage()">
+                        <span>🌐</span>
+                        <span>{{ strtoupper(app()->getLocale()) }}</span>
+                        <span>▼</span>
+                    </button>
+                    <div class="language-menu" id="languageMenu">
+                        <a href="{{ route('language.switch', 'en') }}" class="{{ app()->getLocale() == 'en' ? 'active' : '' }}">
+                            <span>🇬🇧</span>
+                            <span>English</span>
+                        </a>
+                        <a href="{{ route('language.switch', 'ar') }}" class="{{ app()->getLocale() == 'ar' ? 'active' : '' }}">
+                            <span>🇸🇦</span>
+                            <span>العربية</span>
+                        </a>
+                    </div>
+                </div>
+                <a href="{{ route('dashboard.index') }}" class="back-btn">{{ __('dashboard.dashboard') }}</a>
+            </div>
         </div>
     </header>
 
     <main class="main-content">
         <div class="page-header">
-            <h2 class="page-title">Admins Management</h2>
-            <a href="{{ route('dashboard.admins.create') }}" class="add-btn">+ Add New Admin</a>
+            <h2 class="page-title">{{ __('dashboard.admins_management') }}</h2>
+            <a href="{{ route('dashboard.admins.create') }}" class="add-btn">+ {{ __('dashboard.add_new') }}</a>
         </div>
 
         @if(session('success'))
@@ -334,13 +468,13 @@
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th>Created At</th>
-                            <th>Actions</th>
+                            <th>{{ __('dashboard.name') }}</th>
+                            <th>{{ __('dashboard.email') }}</th>
+                            <th>{{ __('dashboard.phone') }}</th>
+                            <th>{{ __('dashboard.role') }}</th>
+                            <th>{{ __('dashboard.status') }}</th>
+                            <th>{{ __('dashboard.created_at') }}</th>
+                            <th>{{ __('dashboard.actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -371,25 +505,25 @@
                                         </form>
                                     @else
                                         @if($admin->is_active)
-                                            <span class="badge badge-active">Active</span>
+                                            <span class="badge badge-active">{{ __('dashboard.active') }}</span>
                                         @else
-                                            <span class="badge badge-inactive">Inactive</span>
+                                            <span class="badge badge-inactive">{{ __('dashboard.inactive') }}</span>
                                         @endif
                                     @endif
                                 </td>
                                 <td>{{ $admin->created_at->format('Y-m-d') }}</td>
                                 <td>
                                     <div class="actions">
-                                        <a href="{{ route('dashboard.admins.show', $admin->id) }}" class="btn btn-view">View</a>
-                                        <a href="{{ route('dashboard.admins.edit', $admin->id) }}" class="btn btn-edit">Edit</a>
+                                        <a href="{{ route('dashboard.admins.show', $admin->id) }}" class="btn btn-view">{{ __('dashboard.view') }}</a>
+                                        <a href="{{ route('dashboard.admins.edit', $admin->id) }}" class="btn btn-edit">{{ __('dashboard.edit') }}</a>
 
                                         @if($admin->id !== auth()->id())
                                             <form action="{{ route('dashboard.admins.destroy', $admin->id) }}" method="POST"
                                                   style="display: inline;"
-                                                  onsubmit="return confirm('Are you sure you want to delete this admin?')">
+                                                  onsubmit="return confirm('{{ __('dashboard.delete_admin_confirm') }}')">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-delete">Delete</button>
+                                                <button type="submit" class="btn btn-delete">{{ __('dashboard.delete') }}</button>
                                             </form>
                                         @endif
                                     </div>
@@ -404,10 +538,25 @@
                 </div>
             @else
                 <div class="no-data">
-                    No admins found
+                    {{ __('dashboard.no_admins_found') }}
                 </div>
             @endif
         </div>
     </main>
+
+    <script>
+        function toggleLanguage() {
+            const menu = document.getElementById('languageMenu');
+            menu.classList.toggle('active');
+        }
+
+        document.addEventListener('click', function(event) {
+            const dropdown = document.querySelector('.language-dropdown');
+            const menu = document.getElementById('languageMenu');
+            if (!dropdown.contains(event.target)) {
+                menu.classList.remove('active');
+            }
+        });
+    </script>
 </body>
 </html>

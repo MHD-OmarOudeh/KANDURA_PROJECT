@@ -122,16 +122,10 @@ class CouponService
      */
     public function deleteCoupon(Coupon $coupon): bool
     {
-        // Check if coupon is being used in any active/completed orders
-        $hasActiveOrders = $coupon->orders()
-            ->whereNotIn('status', ['cancelled', 'rejected'])
-            ->exists();
+        // Set coupon_id to null in all orders that used this coupon
+        $coupon->orders()->update(['coupon_id' => null]);
 
-        if ($hasActiveOrders) {
-            throw new \Exception('Cannot delete coupon that has been used in active orders');
-        }
-
-        // Detach relationships before deleting (cascade will handle it but being explicit)
+        // Detach relationships before deleting
         $coupon->allowedUsers()->detach();
         $coupon->users()->detach();
 
@@ -206,6 +200,11 @@ class CouponService
      */
     public function toggleStatus(Coupon $coupon): Coupon
     {
+        // Check if coupon is expired
+        if ($coupon->isExpired()) {
+            throw new \Exception('Cannot activate an expired coupon. Please update the expiry date first.');
+        }
+
         $coupon->update(['is_active' => !$coupon->is_active]);
         return $coupon->fresh();
     }

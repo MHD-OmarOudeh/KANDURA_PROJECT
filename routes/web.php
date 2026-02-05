@@ -9,6 +9,7 @@ use App\Http\Controllers\Dashboard\OrderController as DashboardOrderController;
 use App\Http\Controllers\Dashboard\CouponController as DashboardCouponController;
 use App\Http\Controllers\Dashboard\WalletController as DashboardWalletController;
 use App\Http\Controllers\Dashboard\AdminController as DashboardAdminController;
+use App\Http\Controllers\StripeRedirectController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,6 +20,12 @@ use App\Http\Controllers\Dashboard\AdminController as DashboardAdminController;
 // Welcome page
 Route::get('/', function () {
     return view('');
+});
+
+// Stripe Payment Redirect Routes
+Route::prefix('payment')->group(function () {
+    Route::get('/success', [StripeRedirectController::class, 'showSuccess'])->name('payment.success');
+    Route::get('/cancel', [StripeRedirectController::class, 'showCancel'])->name('payment.cancel');
 });
 
 // Dashboard routes

@@ -102,8 +102,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Process payment for order
     Route::post('/orders/{order}/payment', [PaymentController::class, 'processPayment']);
 
-    // Create payment intent (for Stripe)
+    // Create payment intent (for Stripe - In-App payment)
     Route::post('/orders/{order}/payment-intent', [PaymentController::class, 'createPaymentIntent']);
+
+    // Create checkout session (for Stripe - Redirect to Stripe page)
+    Route::post('/orders/{order}/checkout-session', [PaymentController::class, 'createCheckoutSession']);
 
     // Refund (Admin only)
     Route::middleware('permission:manage orders')->group(function () {

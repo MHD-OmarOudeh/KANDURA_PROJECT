@@ -346,6 +346,44 @@
             color: #667eea;
             font-weight: 600;
         }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px;
+        }
+
+        .pagination a,
+        .pagination span {
+            padding: 8px 15px;
+            border-radius: 6px;
+            text-decoration: none;
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 40px;
+            height: 40px;
+        }
+
+        .pagination a:hover {
+            background: #f7fafc;
+            border-color: #cbd5e0;
+        }
+
+        .pagination .active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .pagination .disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -492,7 +530,7 @@
         @endif
 
         <!-- Pagination -->
-        <div style="margin-top: 30px;">
+        <div class="pagination">
             {{ $coupons->links() }}
         </div>
     </div>

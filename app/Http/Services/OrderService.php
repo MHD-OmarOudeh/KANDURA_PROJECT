@@ -76,10 +76,33 @@ public function __construct(PaymentService $paymentService)
                 }
             }
 
-            // Fire event
+            // Fire event and generate invoice synchronously
             event(new OrderCreated($order));
 
-            return $order->fresh()->load(['orderItems.design.images', 'address.city', 'coupon']);
+            // Reload order with invoice (event should have created it)
+            $order = $order->fresh()->load(['orderItems.design.images', 'address.city', 'coupon', 'invoice']);
+
+            // If invoice not created by event, create it manually
+            if (!$order->invoice) {
+                $invoiceService = app(\App\Services\InvoiceService::class);
+                $invoiceNumber = $invoiceService->generateInvoiceNumber();
+
+                $invoice = \App\Models\Invoice::create([
+                    'invoice_number' => $invoiceNumber,
+                    'order_id' => $order->id,
+                    'total' => $order->total,
+                    'pdf_url' => null,
+                ]);
+
+                $pdfPath = $invoiceService->generatePDF($invoice);
+                if ($pdfPath) {
+                    $invoice->update(['pdf_url' => $pdfPath]);
+                }
+
+                $order->load('invoice');
+            }
+
+            return $order;
         });
     }
     /**

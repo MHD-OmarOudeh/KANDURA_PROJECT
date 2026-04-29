@@ -28,12 +28,13 @@ class EventServiceProvider extends ServiceProvider
         // Order Events
         OrderCreated::class => [
             SendOrderCreatedNotification::class,
+            GenerateInvoice::class,
         ],
         OrderStatusChanged::class => [
             SendOrderStatusChangedNotification::class,
         ],
         OrderCompleted::class => [
-            GenerateInvoice::class,
+            // Invoice already generated on creation
         ],
 
         // Design Events

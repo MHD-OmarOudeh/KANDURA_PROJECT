@@ -31,7 +31,6 @@ class AuthController extends Controller
 
             $user = $result['user'];
 
-            // Check if user has dashboard access
             if (!$user->hasPermissionTo('access dashboard')) {
                 $this->authService->logout($user, 'web');
                 return back()->withErrors([

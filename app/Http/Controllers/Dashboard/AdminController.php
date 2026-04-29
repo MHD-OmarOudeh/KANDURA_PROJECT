@@ -17,7 +17,7 @@ class AdminController extends Controller
      */
     public function index()
     {
-        $admins = User::role(['admin', 'super_admin'])
+        $admins = User::role(['admin', 'super_admin', 'limited_admin'])
             ->with('roles')
             ->orderBy('created_at', 'desc')
             ->paginate(15);
@@ -30,7 +30,9 @@ class AdminController extends Controller
      */
     public function create()
     {
-        $roles = Role::whereIn('name', ['admin', 'super_admin'])->get();
+        // Only allow creating admin and limited_admin roles
+        // Super admin should be unique
+        $roles = Role::whereIn('name', ['admin', 'limited_admin'])->get();
         $allPermissions = \Spatie\Permission\Models\Permission::all();
         return view('dashboard.admins.create', compact('roles', 'allPermissions'));
     }
@@ -52,9 +54,16 @@ class AdminController extends Controller
                 $admin->assignRole($request->role);
             }
 
-            // Assign permissions to admin
+            // ALWAYS give access dashboard permission to all admins
+            $admin->givePermissionTo('access dashboard');
+
+            
             if ($request->permissions) {
-                $admin->syncPermissions($request->permissions);
+                foreach ($request->permissions as $permission) {
+                    if (!$admin->hasPermissionTo($permission)) {
+                        $admin->givePermissionTo($permission);
+                    }
+                }
             }
 
             return redirect()->route('dashboard.admins.index')
@@ -79,8 +88,16 @@ class AdminController extends Controller
      */
     public function edit(User $admin)
     {
+        // Ensure the user is an admin
+        if (!$admin->hasAnyRole(['admin', 'super_admin', 'limited_admin'])) {
+            return redirect()->route('dashboard.admins.index')
+                ->withErrors(['error' => 'User is not an admin']);
+        }
+
         $admin->load('roles', 'permissions');
-        $roles = Role::whereIn('name', ['admin', 'super_admin'])->get();
+        // Only allow editing to admin and limited_admin roles
+        // Prevent changing super_admin role
+        $roles = Role::whereIn('name', ['admin', 'limited_admin'])->get();
         $allPermissions = \Spatie\Permission\Models\Permission::all();
 
         return view('dashboard.admins.edit', compact('admin', 'roles', 'allPermissions'));
@@ -110,15 +127,20 @@ class AdminController extends Controller
                 $admin->syncRoles([$request->role]);
             }
 
-            // Update permissions
-            if ($request->has('permissions')) {
-                $admin->syncPermissions($request->permissions ?? []);
+            // Update permissions - ALWAYS include access dashboard
+            $permissions = $request->has('permissions') ? $request->permissions : [];
+
+            // Ensure access dashboard is always included
+            if (!in_array('access dashboard', $permissions)) {
+                $permissions[] = 'access dashboard';
             }
+
+            $admin->syncPermissions($permissions);
 
             return redirect()->route('dashboard.admins.index')
                 ->with('success', 'Admin updated successfully');
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'An error occurred while updating the admin'])
+            return back()->withErrors(['error' => 'An error occurred while updating the admin: ' . $e->getMessage()])
                 ->withInput();
         }
     }

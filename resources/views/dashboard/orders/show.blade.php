@@ -659,6 +659,37 @@
                             @endif
                         </div>
                     </div>
+
+                    <!-- Order Review -->
+                    @if($order->review)
+                    <div style="margin-top: 20px; padding: 15px; background: #f0fdf4; border-radius: 10px; border: 1px solid #bbf7d0;">
+                        <h3 style="font-size: 0.9em; color: #15803d; margin-bottom: 10px;">⭐ Customer Review</h3>
+                        <div style="margin-bottom: 10px;">
+                            @for($i = 1; $i <= 5; $i++)
+                                @if($i <= $order->review->rating)
+                                    <span style="color: #fbbf24; font-size: 1.2em;">★</span>
+                                @else
+                                    <span style="color: #d1d5db; font-size: 1.2em;">★</span>
+                                @endif
+                            @endfor
+                            <span style="margin-left: 10px; font-weight: 600; color: #15803d;">{{ $order->review->rating }}/5</span>
+                        </div>
+                        @if($order->review->comment)
+                        <div style="padding: 10px; background: white; border-radius: 5px; font-size: 0.9em; color: #374151;">
+                            "{{ $order->review->comment }}"
+                        </div>
+                        @endif
+                        <div style="margin-top: 10px; font-size: 0.8em; color: #6b7280;">
+                            Reviewed on {{ $order->review->created_at->format('d M Y, H:i') }}
+                        </div>
+                    </div>
+                    @elseif($order->status === 'completed')
+                    <div style="margin-top: 20px; padding: 15px; background: #fef3c7; border-radius: 10px; border: 1px solid #fcd34d;">
+                        <p style="font-size: 0.85em; color: #92400e;">
+                            ⏳ Customer hasn't reviewed this order yet.
+                        </p>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>

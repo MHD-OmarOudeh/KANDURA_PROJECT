@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreDesignRequest;
 use App\Http\Requests\UpdateDesignRequest;
+use App\Http\Requests\UpdateDesignImagesRequest;
 use App\Http\Resources\DesignResource;
 use App\Http\Services\DesignService;
 use App\Models\Design;
@@ -124,6 +125,28 @@ class DesignController extends Controller
             return $this->forbidden('You do not have permission to delete this design');
         } catch (\Exception $e) {
             return $this->error('Failed to delete design', $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Update design images
+     * POST /api/designs/{design}/images
+     */
+    public function updateImages(UpdateDesignImagesRequest $request, Design $design)
+    {
+        try {
+            $this->authorize('update', $design);
+
+            $updatedDesign = $this->designService->updateDesignImages($design, $request->validated());
+
+            return $this->success(
+                new DesignResource($updatedDesign),
+                'Design images updated successfully'
+            );
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return $this->forbidden('You do not have permission to update this design');
+        } catch (\Exception $e) {
+            return $this->error('Failed to update design images', $e->getMessage(), 500);
         }
     }
 }

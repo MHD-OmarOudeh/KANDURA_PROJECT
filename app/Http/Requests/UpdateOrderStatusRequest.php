@@ -11,7 +11,7 @@ class UpdateOrderStatusRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->hasPermissionTo('manage orders');
+        return $this->user()->hasPermissionTo('manage all orders');
     }
 
     /**

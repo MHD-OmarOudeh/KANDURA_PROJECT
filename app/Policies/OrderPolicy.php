@@ -12,7 +12,7 @@ class OrderPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('manage orders');
+        return $user->hasPermissionTo('manage all orders');
     }
 
     /**
@@ -26,7 +26,7 @@ class OrderPolicy
         }
 
         // Admin can view all orders
-        return $user->hasPermissionTo('manage orders');
+        return $user->hasPermissionTo('manage all orders');
     }
 
     /**
@@ -43,7 +43,7 @@ class OrderPolicy
      */
     public function updateStatus(User $user, Order $order): bool
     {
-        return $user->hasPermissionTo('manage orders');
+        return $user->hasPermissionTo('manage all orders');
     }
 
     /**
@@ -57,7 +57,7 @@ class OrderPolicy
         }
 
         // Admin can cancel any order
-        return $user->hasPermissionTo('manage orders');
+        return $user->hasPermissionTo('manage all orders');
     }
 
     /**
@@ -66,7 +66,7 @@ class OrderPolicy
     public function delete(User $user, Order $order): bool
     {
         // Only admin can permanently delete
-        return $user->hasPermissionTo('manage orders');
+        return $user->hasPermissionTo('manage all orders');
     }
     /**
      * Determine if user can pay for the order
@@ -83,6 +83,6 @@ class OrderPolicy
     public function refund(User $user, Order $order): bool
     {
         // Only admin can process refunds
-        return $user->hasPermissionTo('manage orders');
+        return $user->hasPermissionTo('manage all orders');
     }
 }

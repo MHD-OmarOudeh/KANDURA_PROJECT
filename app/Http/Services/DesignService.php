@@ -171,4 +171,26 @@ class DesignService
             return $design->delete();
         });
     }
+
+    public function updateDesignImages(Design $design, array $data): Design
+    {
+        return DB::transaction(function () use ($design, $data) {
+            // Delete old images
+            foreach ($design->images as $oldImage) {
+                Storage::disk('public')->delete($oldImage->image_path);
+            }
+            $design->images()->delete();
+
+            // Add new images
+            foreach ($data['images'] as $index => $image) {
+                $path = $image->store('designs', 'public');
+                $design->images()->create([
+                    'image_path' => $path,
+                    'is_primary' => $index === 0,
+                ]);
+            }
+
+            return $design->fresh(['images', 'measurements', 'designOptions', 'user']);
+        });
+    }
 }

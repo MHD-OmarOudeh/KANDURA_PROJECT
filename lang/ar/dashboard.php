@@ -42,7 +42,6 @@ return [
     'save' => 'حفظ',
     'cancel' => 'إلغاء',
     'login' => 'تسجيل الدخول',
-    'logout' => 'تسجيل الخروج',
     'email' => 'البريد الإلكتروني',
     'password' => 'كلمة المرور',
     'no_admins_found' => 'لم يتم العثور على مدراء',
@@ -115,4 +114,21 @@ return [
     'new_coupon_created' => 'تم إنشاء قسيمة جديدة',
     'no_recent_activity' => 'لا يوجد نشاط لعرضه',
     'all_rights_reserved' => 'جميع الحقوق محفوظة',
+
+    // Permissions
+    'no_permissions' => 'لا توجد صلاحيات',
+    'no_permissions_message' => 'ليس لديك حالياً أي صلاحيات محددة. يرجى التواصل مع المسؤول الرئيسي لمنحك الوصول إلى الأقسام المحددة.',
+    'important' => 'مهم',
+    'limited_admin_note' => 'للمدير المحدود: اختر فقط الصلاحيات التي تريد منحها. سيكون للمدير وصول فقط إلى الأقسام المحددة.',
+
+    // Notifications
+    'notifications' => 'الإشعارات',
+    'mark_all_read' => 'تعيين الكل كمقروء',
+    'no_notifications' => 'لا توجد إشعارات',
+    'loading_notifications' => 'جاري تحميل الإشعارات...',
+    'error_loading_notifications' => 'خطأ في تحميل الإشعارات',
+    'just_now' => 'الآن',
+    'minutes_ago' => 'دقيقة مضت',
+    'hours_ago' => 'ساعة مضت',
+    'days_ago' => 'يوم مضى',
 ];

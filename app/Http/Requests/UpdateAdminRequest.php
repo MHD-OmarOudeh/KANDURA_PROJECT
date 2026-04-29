@@ -25,11 +25,11 @@ class UpdateAdminRequest extends FormRequest
         $adminId = $this->route('admin')->id;
 
         return [
-            'name' => ['sometimes', 'required', 'string', 'max:255'],
-            'email' => ['sometimes', 'required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($adminId)],
-            'phone' => ['sometimes', 'required', 'string', 'max:20', Rule::unique('users')->ignore($adminId)],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($adminId)],
+            'phone' => ['required', 'string', 'max:20', Rule::unique('users')->ignore($adminId)],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
-            'role' => ['sometimes', 'required', 'string', 'exists:roles,name'],
+            'role' => ['required', 'string', 'exists:roles,name', 'not_in:super_admin'],
             'permissions' => ['nullable', 'array'],
             'permissions.*' => ['exists:permissions,name'],
             'is_active' => ['nullable', 'boolean'],

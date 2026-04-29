@@ -11,7 +11,6 @@ class AuthService
 {
     public function register(array $data): array
     {
-        // إنشاء المستخدم
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
@@ -19,15 +18,10 @@ class AuthService
             'password' => Hash::make($data['password']),
             'is_active' => true,
         ]);
-
-        // ✅ إضافة الـ Role بشكل صحيح (بعد إنشاء المستخدم مباشرة)
         $user->assignRole('user');
-
-        // إنشاء Token
         $token = $user->createToken('auth_token')->plainTextToken;
-
         return [
-            'user' => $user->fresh(), // ← جيب البيانات الجديدة
+            'user' => $user->fresh(), 
             'token' => $token,
         ];
     }
@@ -41,20 +35,14 @@ class AuthService
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
-
         if (!$user->is_active) {
             throw ValidationException::withMessages([
                 'email' => ['Your account has been deactivated.'],
             ]);
         }
-
         if ($guard === 'sanctum') {
-            // امسح الـ tokens القديمة
             $user->tokens()->delete();
-
-            // أنشئ token جديد
             $token = $user->createToken('auth_token')->plainTextToken;
-
             return [
                 'user' => $user,
                 'token' => $token,

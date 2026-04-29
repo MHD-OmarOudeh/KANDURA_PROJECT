@@ -2,7 +2,7 @@
 
 namespace App\Listeners;
 
-use App\Events\OrderCompleted;
+use App\Events\OrderCreated;
 use App\Models\Invoice;
 use App\Services\InvoiceService;
 use Illuminate\Support\Facades\Log;
@@ -13,7 +13,7 @@ class GenerateInvoice
     {
     }
 
-    public function handle(OrderCompleted $event): void
+    public function handle(OrderCreated $event): void
     {
         try {
             $order = $event->order;
@@ -43,7 +43,6 @@ class GenerateInvoice
                 $invoice->update(['pdf_url' => $pdfPath]);
                 Log::info('PDF generated successfully', ['pdf_url' => $pdfPath]);
 
-                // Invoice generated successfully (no notification needed based on requirements)
             }
         } catch (\Exception $e) {
             Log::error('Failed to generate invoice', [

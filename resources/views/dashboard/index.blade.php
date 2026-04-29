@@ -121,6 +121,200 @@
             font-weight: 600;
         }
 
+        /* Notifications */
+        .notifications-dropdown {
+            position: relative;
+        }
+
+        .notifications-btn {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            width: 45px;
+            height: 45px;
+        }
+
+        .notifications-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            min-width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7em;
+            font-weight: 700;
+            padding: 2px;
+            border: 2px solid white;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        .notifications-menu {
+            position: absolute;
+            top: 110%;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            min-width: 380px;
+            max-width: 450px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            overflow: hidden;
+            max-height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .notifications-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .notifications-header {
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .notifications-header h3 {
+            margin: 0;
+            font-size: 1em;
+        }
+
+        .mark-all-read-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mark-all-read-btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+        }
+
+        .notifications-body {
+            overflow-y: auto;
+            max-height: 450px;
+        }
+
+        .notification-item {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .notification-item:hover {
+            background: #f7fafc;
+        }
+
+        .notification-item.unread {
+            background: #eef2ff;
+        }
+
+        .notification-item.unread:hover {
+            background: #e0e7ff;
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3em;
+        }
+
+        .notification-icon.order {
+            background: #dbeafe;
+            color: #3b82f6;
+        }
+
+        .notification-icon.design {
+            background: #fce7f3;
+            color: #ec4899;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.9em;
+            margin-bottom: 4px;
+        }
+
+        .notification-message {
+            color: #718096;
+            font-size: 0.85em;
+            line-height: 1.4;
+            margin-bottom: 4px;
+        }
+
+        .notification-time {
+            color: #a0aec0;
+            font-size: 0.75em;
+        }
+
+        .notifications-empty {
+            padding: 40px 20px;
+            text-align: center;
+            color: #a0aec0;
+        }
+
+        .notifications-empty-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+
         .user-info {
             text-align: right;
         }
@@ -543,6 +737,26 @@
                 <p>{{ __('dashboard.khaleeji_kandura_design') }}</p>
             </div>
             <div class="header-right">
+                <!-- Notifications Dropdown -->
+                <div class="notifications-dropdown">
+                    <button class="notifications-btn" onclick="toggleNotifications()">
+                        <span>🔔</span>
+                        <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                    </button>
+                    <div class="notifications-menu" id="notificationsMenu">
+                        <div class="notifications-header">
+                            <h3>{{ __('dashboard.notifications') }}</h3>
+                            <button class="mark-all-read-btn" onclick="markAllAsRead(event)">{{ __('dashboard.mark_all_read') }}</button>
+                        </div>
+                        <div class="notifications-body" id="notificationsBody">
+                            <div class="notifications-empty">
+                                <div class="notifications-empty-icon">🔔</div>
+                                <p>{{ __('dashboard.loading_notifications') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Language Dropdown -->
                 <div class="language-dropdown">
                     <button class="language-btn" onclick="toggleLanguage()">
@@ -582,6 +796,24 @@
             <h2>{{ __('dashboard.kandura_store_management') }}</h2>
             <p>{{ __('dashboard.khaleeji_kandura_design') }}</p>
         </div>
+
+        @php
+            $hasAnyPermission = auth()->user()->can('manage all designs') ||
+                                auth()->user()->can('manage design options') ||
+                                auth()->user()->can('manage all addresses') ||
+                                auth()->user()->can('manage all orders') ||
+                                auth()->user()->can('manage coupons') ||
+                                auth()->user()->can('manage wallet') ||
+                                auth()->user()->can('manage users') ||
+                                auth()->user()->hasRole('super_admin');
+        @endphp
+
+        @if(!$hasAnyPermission)
+            <div class="alert alert-warning" style="background: #fff3cd; color: #856404; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #ffeaa7;">
+                <h3 style="margin-bottom: 10px;">⚠️ {{ __('dashboard.no_permissions') ?? 'No Permissions' }}</h3>
+                <p>{{ __('dashboard.no_permissions_message') ?? 'You currently do not have any permissions assigned. Please contact the super admin to grant you access to specific modules.' }}</p>
+            </div>
+        @endif
 
         <!-- Statistics Cards -->
         <div class="stats-grid">
@@ -623,7 +855,7 @@
                 </div>
             </div>
             @endcan
-            @can('manage orders')
+            @can('manage all orders')
             <div class="stat-card">
                 <div class="stat-header">
                     <div>
@@ -674,6 +906,7 @@
             </div>
             @endif
 
+            @can('manage users')
             <div class="stat-card">
                 <div class="stat-header">
                     <div>
@@ -684,6 +917,7 @@
                     <div class="stat-icon">👥</div>
                 </div>
             </div>
+            @endcan
         </div>
 
         <!-- Quick Actions -->
@@ -713,7 +947,7 @@
             </a>
             @endcan
             <!-- In Quick Actions Grid - Add after existing action cards -->
-            @can('manage orders')
+            @can('manage all orders')
             <a href="{{ route('dashboard.orders.index') }}" class="action-card">
                 <div class="action-icon">📦</div>
                 <h3>{{ __('dashboard.orders_management') }}</h3>
@@ -806,7 +1040,7 @@
                 }
 
                 // Add recent orders
-                if (auth()->user()->can('manage orders')) {
+                if (auth()->user()->can('manage all orders')) {
                     $recentOrders = \App\Models\Order::with('user')->latest()->take(3)->get();
                     foreach ($recentOrders as $order) {
                         $recentActivities->push([
@@ -868,14 +1102,163 @@
             menu.classList.toggle('active');
         }
 
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(event) {
-            const dropdown = document.querySelector('.language-dropdown');
-            const menu = document.getElementById('languageMenu');
+        function toggleNotifications() {
+            const menu = document.getElementById('notificationsMenu');
+            menu.classList.toggle('active');
 
-            if (!dropdown.contains(event.target)) {
-                menu.classList.remove('active');
+            if (menu.classList.contains('active')) {
+                loadNotifications();
             }
+        }
+
+        function loadNotifications() {
+            const body = document.getElementById('notificationsBody');
+            body.innerHTML = '<div class="notifications-empty"><div class="notifications-empty-icon">⏳</div><p>{{ __('dashboard.loading_notifications') }}</p></div>';
+
+            fetch('{{ route('dashboard.notifications.index') }}')
+                .then(response => response.json())
+                .then(data => {
+                    updateNotificationBadge(data.unread_count);
+                    renderNotifications(data);
+                })
+                .catch(error => {
+                    console.error('Error loading notifications:', error);
+                    body.innerHTML = '<div class="notifications-empty"><div class="notifications-empty-icon">⚠️</div><p>{{ __('dashboard.error_loading_notifications') }}</p></div>';
+                });
+        }
+
+        function renderNotifications(data) {
+            const body = document.getElementById('notificationsBody');
+            const allNotifications = [...data.unread, ...data.read];
+
+            if (allNotifications.length === 0) {
+                body.innerHTML = '<div class="notifications-empty"><div class="notifications-empty-icon">📭</div><p>{{ __('dashboard.no_notifications') }}</p></div>';
+                return;
+            }
+
+            let html = '';
+            allNotifications.forEach(notification => {
+                const notificationData = notification.data;
+                const isUnread = !notification.read_at;
+                const icon = notificationData.type === 'order' ? '📦' : '🎨';
+                const iconClass = notificationData.type === 'order' ? 'order' : 'design';
+                const timeAgo = getTimeAgo(notification.created_at);
+
+                html += `
+                    <div class="notification-item ${isUnread ? 'unread' : ''}" onclick="markAsRead('${notification.id}', '${notificationData.action_url}')">
+                        <div class="notification-icon ${iconClass}">${icon}</div>
+                        <div class="notification-content">
+                            <div class="notification-title">${notificationData.title}</div>
+                            <div class="notification-message">${notificationData.message}</div>
+                            <div class="notification-time">${timeAgo}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            body.innerHTML = html;
+        }
+
+        function markAsRead(notificationId, actionUrl) {
+            fetch(`/dashboard/notifications/${notificationId}/mark-as-read`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadNotificationCount();
+                    if (actionUrl) {
+                        window.location.href = actionUrl;
+                    }
+                }
+            })
+            .catch(error => console.error('Error marking notification as read:', error));
+        }
+
+        function markAllAsRead(event) {
+            event.stopPropagation();
+
+            fetch('{{ route('dashboard.notifications.mark-all-as-read') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadNotifications();
+                    loadNotificationCount();
+                }
+            })
+            .catch(error => console.error('Error marking all as read:', error));
+        }
+
+        function updateNotificationBadge(count) {
+            const badge = document.getElementById('notificationBadge');
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function loadNotificationCount() {
+            fetch('{{ route('dashboard.notifications.unread-count') }}')
+                .then(response => response.json())
+                .then(data => {
+                    updateNotificationBadge(data.count);
+                })
+                .catch(error => console.error('Error loading notification count:', error));
+        }
+
+        function getTimeAgo(timestamp) {
+            const now = new Date();
+            const time = new Date(timestamp);
+            const diffInSeconds = Math.floor((now - time) / 1000);
+
+            if (diffInSeconds < 60) {
+                return '{{ __('dashboard.just_now') }}';
+            } else if (diffInSeconds < 3600) {
+                const minutes = Math.floor(diffInSeconds / 60);
+                return `${minutes} {{ __('dashboard.minutes_ago') }}`;
+            } else if (diffInSeconds < 86400) {
+                const hours = Math.floor(diffInSeconds / 3600);
+                return `${hours} {{ __('dashboard.hours_ago') }}`;
+            } else {
+                const days = Math.floor(diffInSeconds / 86400);
+                return `${days} {{ __('dashboard.days_ago') }}`;
+            }
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            const languageDropdown = document.querySelector('.language-dropdown');
+            const languageMenu = document.getElementById('languageMenu');
+            const notificationsDropdown = document.querySelector('.notifications-dropdown');
+            const notificationsMenu = document.getElementById('notificationsMenu');
+
+            if (!languageDropdown.contains(event.target)) {
+                languageMenu.classList.remove('active');
+            }
+
+            if (!notificationsDropdown.contains(event.target)) {
+                notificationsMenu.classList.remove('active');
+            }
+        });
+
+        // Load notification count on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadNotificationCount();
+
+            // Refresh notification count every 30 seconds
+            setInterval(loadNotificationCount, 30000);
         });
     </script>
 

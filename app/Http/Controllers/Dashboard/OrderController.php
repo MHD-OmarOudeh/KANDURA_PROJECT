@@ -70,6 +70,7 @@ class OrderController extends Controller
     public function show(Order $order)
     {
         $order = $this->orderService->getOrderDetails($order);
+        $order->load('review'); // Load review relationship
 
         return view('dashboard.orders.show', compact('order'));
     }

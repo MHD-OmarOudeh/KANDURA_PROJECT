@@ -29,7 +29,8 @@ class DatabaseSeeder extends Seeder
             MeasurementSeeder::class,
             DesignOptionSeeder::class,
 
-            // أي Seeders إضافية عندك ضيفها هون
+            // Demo Data - آخر شي
+            DemoDataSeeder::class,
         ]);
     }
 }

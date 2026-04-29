@@ -292,12 +292,43 @@
             text-decoration: none;
             color: #4a5568;
             border: 1px solid #e2e8f0;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 40px;
+            height: 40px;
         }
 
         .pagination .active {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border-color: #667eea;
+        }
+
+        /* Fix RTL pagination arrows */
+        [dir="rtl"] .pagination a[rel="prev"]::before,
+        [dir="rtl"] .pagination span[rel="prev"]::before {
+            content: '→';
+            margin-inline-end: 5px;
+        }
+
+        [dir="rtl"] .pagination a[rel="next"]::after,
+        [dir="rtl"] .pagination span[rel="next"]::after {
+            content: '←';
+            margin-inline-start: 5px;
+        }
+
+        [dir="ltr"] .pagination a[rel="prev"]::before,
+        [dir="ltr"] .pagination span[rel="prev"]::before {
+            content: '←';
+            margin-inline-end: 5px;
+        }
+
+        [dir="ltr"] .pagination a[rel="next"]::after,
+        [dir="ltr"] .pagination span[rel="next"]::after {
+            content: '→';
+            margin-inline-start: 5px;
         }
     </style>
 </head>

@@ -42,7 +42,6 @@ return [
     'save' => 'Save',
     'cancel' => 'Cancel',
     'login' => 'Login',
-    'logout' => 'Logout',
     'email' => 'Email',
     'password' => 'Password',
     'no_admins_found' => 'No admins found',
@@ -113,4 +112,21 @@ return [
     'delete_coupon_confirm' => 'Are you sure you want to delete this coupon?',    'new_coupon_created' => 'New coupon created',
     'no_recent_activity' => 'No recent activity to display',
     'all_rights_reserved' => 'All Rights Reserved',
+
+    // Permissions
+    'no_permissions' => 'No Permissions',
+    'no_permissions_message' => 'You currently do not have any permissions assigned. Please contact the super admin to grant you access to specific modules.',
+    'important' => 'Important',
+    'limited_admin_note' => 'For Limited Admin: Select ONLY the permissions you want to grant. The admin will have access ONLY to the selected sections.',
+
+    // Notifications
+    'notifications' => 'Notifications',
+    'mark_all_read' => 'Mark All as Read',
+    'no_notifications' => 'No notifications',
+    'loading_notifications' => 'Loading notifications...',
+    'error_loading_notifications' => 'Error loading notifications',
+    'just_now' => 'Just now',
+    'minutes_ago' => 'minutes ago',
+    'hours_ago' => 'hours ago',
+    'days_ago' => 'days ago',
 ];

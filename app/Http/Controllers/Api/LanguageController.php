@@ -42,9 +42,15 @@ class LanguageController extends Controller
     /**
      * Get current language
      */
-    public function current(): JsonResponse
+    public function current(Request $request): JsonResponse
     {
-        $locale = app()->getLocale();
+        // Get locale from the same priority as middleware
+        // 1. User preference (if authenticated)
+        // 2. Accept-Language header
+        // 3. Session
+        // 4. Default
+
+        $locale = app()->getLocale(); // This is already set by SetLocale middleware
 
         $languages = [
             'en' => [

@@ -26,7 +26,7 @@ class StoreAdminRequest extends FormRequest
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'phone' => ['required', 'string', 'max:20', 'unique:users,phone'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'string', 'exists:roles,name'],
+            'role' => ['required', 'string', 'exists:roles,name', 'not_in:super_admin'],
             'permissions' => ['nullable', 'array'],
             'permissions.*' => ['exists:permissions,name'],
             'is_active' => ['nullable', 'boolean'],

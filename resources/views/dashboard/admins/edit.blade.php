@@ -399,15 +399,29 @@
 
                 <div class="form-group">
                     <label for="role">Role <span class="required">*</span></label>
-                    <select id="role" name="role" required>
+                    <select id="role" name="role" required onchange="togglePermissions()">
                         <option value="">Select Role</option>
                         @foreach($roles as $role)
+                            @php
+                                $currentRole = old('role') ?? ($admin->roles->first() ? $admin->roles->first()->name : '');
+                            @endphp
                             <option value="{{ $role->name }}"
-                                {{ old('role', $admin->roles->first()->name ?? '') == $role->name ? 'selected' : '' }}>
-                                {{ $role->name == 'super_admin' ? 'Super Admin' : 'Admin' }}
+                                {{ $currentRole == $role->name ? 'selected' : '' }}>
+                                @if($role->name == 'super_admin')
+                                    Super Admin (All Permissions)
+                                @elseif($role->name == 'admin')
+                                    Admin (Full Dashboard Access)
+                                @elseif($role->name == 'limited_admin')
+                                    Limited Admin (Custom Permissions)
+                                @else
+                                    {{ ucfirst(str_replace('_', ' ', $role->name)) }}
+                                @endif
                             </option>
                         @endforeach
                     </select>
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        💡 "Limited Admin" allows custom permission selection
+                    </small>
                     @error('role')
                         <div class="error">{{ $message }}</div>
                     @enderror
@@ -416,22 +430,31 @@
                 <div class="form-group">
                     <div class="checkbox-group">
                         <input type="checkbox" id="is_active" name="is_active" value="1"
-                            {{ old('is_active', $admin->is_active) ? 'checked' : '' }}>
+                            {{ (old('is_active') !== null ? old('is_active') : $admin->is_active) ? 'checked' : '' }}>
                         <label for="is_active" style="margin: 0;">Active</label>
                     </div>
                 </div>
 
                 @if($allPermissions && $allPermissions->count() > 0)
-                <div class="permissions-section">
+                <div class="permissions-section" id="permissionsSection">
                     <h3>Permissions</h3>
+                    <div id="permissionsNote" style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-right: 4px solid #ffc107; display: none;">
+                        <strong>⚠️ Important:</strong>
+                        <p style="margin: 5px 0 0 0; color: #856404;">
+                            For Limited Admin: Select ONLY the permissions you want to grant. The admin will have access ONLY to the selected sections.
+                        </p>
+                    </div>
                     <div class="permissions-grid">
                         @foreach($allPermissions as $permission)
+                            @php
+                                $userPermissions = old('permissions') ?? $admin->permissions->pluck('name')->toArray();
+                            @endphp
                             <div class="permission-item">
                                 <input type="checkbox"
                                     id="permission_{{ $permission->id }}"
                                     name="permissions[]"
                                     value="{{ $permission->name }}"
-                                    {{ in_array($permission->name, old('permissions', $admin->permissions->pluck('name')->toArray())) ? 'checked' : '' }}>
+                                    {{ in_array($permission->name, $userPermissions) ? 'checked' : '' }}>
                                 <label for="permission_{{ $permission->id }}" style="margin: 0;">
                                     {{ $permission->name }}
                                 </label>
@@ -450,6 +473,24 @@
     </main>
 
     <script>
+        function togglePermissions() {
+            const roleSelect = document.getElementById('role');
+            const permissionsNote = document.getElementById('permissionsNote');
+
+            if (roleSelect && permissionsNote) {
+                if (roleSelect.value === 'limited_admin') {
+                    permissionsNote.style.display = 'block';
+                } else {
+                    permissionsNote.style.display = 'none';
+                }
+            }
+        }
+
+        // Call on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            togglePermissions();
+        });
+
         function toggleLanguage() {
             const menu = document.getElementById('languageMenu');
             menu.classList.toggle('active');

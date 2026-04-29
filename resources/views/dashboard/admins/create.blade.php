@@ -395,10 +395,21 @@
                         <option value="">{{ __('dashboard.select_role') }}</option>
                         @foreach($roles as $role)
                             <option value="{{ $role->name }}" {{ old('role') == $role->name ? 'selected' : '' }}>
-                                {{ $role->name == 'super_admin' ? 'Super Admin' : 'Admin' }}
+                                @if($role->name == 'super_admin')
+                                    Super Admin (All Permissions)
+                                @elseif($role->name == 'admin')
+                                    Admin (Full Dashboard Access)
+                                @elseif($role->name == 'limited_admin')
+                                    Limited Admin (Custom Permissions)
+                                @else
+                                    {{ ucfirst(str_replace('_', ' ', $role->name)) }}
+                                @endif
                             </option>
                         @endforeach
                     </select>
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        💡 Choose "Limited Admin" to assign specific permissions only
+                    </small>
                     @error('role')
                         <div class="error">{{ $message }}</div>
                     @enderror
@@ -414,6 +425,12 @@
                 @if($allPermissions && $allPermissions->count() > 0)
                 <div class="permissions-section" id="permissionsSection" style="display: none;">
                     <h3>{{ __('dashboard.permissions') }}</h3>
+                    <div id="permissionsNote" style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-right: 4px solid #ffc107; display: none;">
+                        <strong>⚠️ {{ __('dashboard.important') ?? 'Important' }}:</strong>
+                        <p style="margin: 5px 0 0 0; color: #856404;">
+                            {{ __('dashboard.limited_admin_note') ?? 'For Limited Admin: Select ONLY the permissions you want to grant. The admin will have access ONLY to the selected sections.' }}
+                        </p>
+                    </div>
                     <div style="margin-bottom: 15px;">
                         <button type="button" class="btn btn-secondary" onclick="selectAllPermissions()" style="padding: 8px 16px; font-size: 14px;">{{ __('dashboard.select_all') }}</button>
                         <button type="button" class="btn btn-secondary" onclick="deselectAllPermissions()" style="padding: 8px 16px; font-size: 14px; margin-left: 10px;">{{ __('dashboard.deselect_all') }}</button>
@@ -448,11 +465,17 @@
         function togglePermissions() {
             const roleSelect = document.getElementById('role');
             const permissionsSection = document.getElementById('permissionsSection');
+            const permissionsNote = document.getElementById('permissionsNote');
 
-            if (roleSelect.value === 'admin') {
+            if (roleSelect.value === 'limited_admin') {
                 permissionsSection.style.display = 'block';
+                permissionsNote.style.display = 'block';
+            } else if (roleSelect.value === 'admin') {
+                permissionsSection.style.display = 'block';
+                permissionsNote.style.display = 'none';
             } else {
                 permissionsSection.style.display = 'none';
+                permissionsNote.style.display = 'none';
             }
         }
 

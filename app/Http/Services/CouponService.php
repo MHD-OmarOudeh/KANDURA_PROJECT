@@ -13,7 +13,7 @@ class CouponService
     /**
      * Get all coupons with filters (Admin)
      */
-    public function getAllCoupons(array $filters = []): LengthAwarePaginator
+    public function getAllCoupons(array $filters = [])
     {
         $query = Coupon::with(['allowedUsers'])->withCount('users');
 
@@ -56,7 +56,7 @@ class CouponService
     /**
      * Get valid coupons (User can see)
      */
-    public function getValidCoupons(User $user): LengthAwarePaginator
+    public function getValidCoupons(User $user)
     {
         $query = Coupon::valid();
 
@@ -74,7 +74,7 @@ class CouponService
     /**
      * Create new coupon
      */
-    public function createCoupon(array $data): Coupon
+    public function createCoupon(array $data)
     {
         // Generate unique code if not provided
         if (empty($data['code'])) {
@@ -101,7 +101,7 @@ class CouponService
     /**
      * Update coupon
      */
-    public function updateCoupon(Coupon $coupon, array $data): Coupon
+    public function updateCoupon(Coupon $coupon, array $data)
     {
         if (!empty($data['code'])) {
             $data['code'] = strtoupper($data['code']);
@@ -120,7 +120,7 @@ class CouponService
     /**
      * Delete coupon
      */
-    public function deleteCoupon(Coupon $coupon): bool
+    public function deleteCoupon(Coupon $coupon)
     {
         // Set coupon_id to null in all orders that used this coupon
         $coupon->orders()->update(['coupon_id' => null]);
@@ -136,7 +136,7 @@ class CouponService
     /**
      * Validate coupon for user and order amount
      */
-    public function validateCoupon(string $code, User $user, float $orderAmount): array
+    public function validateCoupon(string $code, User $user, float $orderAmount)
     {
         $coupon = Coupon::byCode($code)->first();
 
@@ -165,19 +165,16 @@ class CouponService
     /**
      * Apply coupon to order
      */
-    public function applyCouponToOrder(Coupon $coupon, User $user, Order $order): float
+    public function applyCouponToOrder(Coupon $coupon, User $user, Order $order)
     {
-        // Final validation
-        $validation = $coupon->validate($user, $order->subtotal);
+        $validation = $coupon->validate($user, (float) $order->subtotal);
 
         if (!$validation['valid']) {
             throw new \Exception($validation['message']);
         }
 
-        // Calculate discount
-        $discount = $coupon->calculateDiscount($order->subtotal);
+        $discount = $coupon->calculateDiscount((float) $order->subtotal);
 
-        // Mark as used
         $coupon->markAsUsed($user, $order);
 
         return $discount;
@@ -186,7 +183,7 @@ class CouponService
     /**
      * Generate unique coupon code
      */
-    protected function generateUniqueCouponCode(): string
+    protected function generateUniqueCouponCode()
     {
         do {
             $code = strtoupper(Str::random(8));
@@ -198,9 +195,8 @@ class CouponService
     /**
      * Toggle coupon active status
      */
-    public function toggleStatus(Coupon $coupon): Coupon
+    public function toggleStatus(Coupon $coupon)
     {
-        // Check if coupon is expired
         if ($coupon->isExpired()) {
             throw new \Exception('Cannot activate an expired coupon. Please update the expiry date first.');
         }
@@ -212,7 +208,7 @@ class CouponService
     /**
      * Get coupon usage statistics
      */
-    public function getCouponStats(Coupon $coupon): array
+    public function getCouponStats(Coupon $coupon)
     {
         return [
             'total_uses' => $coupon->used_count,

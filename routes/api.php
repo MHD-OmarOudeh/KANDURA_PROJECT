@@ -16,17 +16,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\LanguageController;
 
 
-/*
-|--------------------------------------------------------------------------
-| API Routes - Stage 1 & 2
-|--------------------------------------------------------------------------
-*/
 
-// ==========================================
-// Public routes (No authentication)
-// ==========================================
-
-// Language Routes
 Route::prefix('language')->group(function () {
     Route::get('/', [LanguageController::class, 'index']);
     Route::get('/current', [LanguageController::class, 'current']);
@@ -38,37 +28,27 @@ Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 });
 
-// ==========================================
-// Protected routes (Requires authentication)
-// ==========================================
 Route::middleware('auth:sanctum')->group(function () {
 
-    // ============ Auth Routes ============
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
-    // ============ User Routes ============
     Route::get('/users/me', [UserController::class, 'show']);
     Route::put('/users/me', [UserController::class, 'update']);
-    Route::post('/users/me', [UserController::class, 'update']); // for FormData with image
+    Route::post('/users/me', [UserController::class, 'update']);
 
-    // ============ Address Routes ============
     Route::apiResource('addresses', AddressController::class);
 
-    // ============ Measurement Routes (Read Only) ============
     Route::get('/measurements', [MeasurementController::class, 'index']);
     Route::get('/measurements/{measurement}', [MeasurementController::class, 'show']);
 
-    // ============ Design Routes ============
-    // filter=my → user's own designs
-    // filter=others → other users' designs
     Route::apiResource('designs', DesignController::class);
 
-    // ============ Design Options Routes ============
-    // All users can view (for creating designs)
+    Route::post('/designs/{design}/images', [DesignController::class, 'updateImages']);
+
+
     Route::get('/design-options', [DesignOptionController::class, 'index']);
     Route::get('/design-options/{designOption}', [DesignOptionController::class, 'show']);
 
-    // Admin only routes for Design Options
     Route::middleware('permission:manage design options')->group(function () {
         Route::post('/design-options', [DesignOptionController::class, 'store']);
         Route::put('/design-options/{designOption}', [DesignOptionController::class, 'update']);
@@ -78,28 +58,22 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/orders', [OrderController::class, 'index']);
     Route::post('/orders', [OrderController::class, 'store']);
     Route::get('/orders/{order}', [OrderController::class, 'show']);
-    Route::delete('/orders/{order}', [OrderController::class, 'destroy']); // Cancel order
+    Route::delete('/orders/{order}', [OrderController::class, 'destroy']);
 
-    // Admin routes - manage all orders
-    Route::middleware('permission:manage orders')->group(function () {
+    Route::middleware('permission:manage all orders')->group(function () {
         Route::get('/orders/all', [OrderController::class, 'all']);
         Route::put('/orders/{order}/status', [OrderController::class, 'updateStatus']);
     });
-    // ============ Wallet Routes (Stage 4) ============
 
-    // User routes - view wallet
     Route::get('/wallet', [WalletController::class, 'show']);
     Route::get('/wallet/transactions', [WalletController::class, 'transactions']);
 
-    // Admin routes - manage wallet
     Route::middleware('permission:manage wallet')->group(function () {
         Route::post('/wallet/deposit', [WalletController::class, 'deposit']);
         Route::post('/wallet/withdraw', [WalletController::class, 'withdraw']);
     });
 
-    // ============ Payment Routes (Stage 4) ============
 
-    // Process payment for order
     Route::post('/orders/{order}/payment', [PaymentController::class, 'processPayment']);
 
     // Create payment intent (for Stripe - In-App payment)
@@ -108,17 +82,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Create checkout session (for Stripe - Redirect to Stripe page)
     Route::post('/orders/{order}/checkout-session', [PaymentController::class, 'createCheckoutSession']);
 
-    // Refund (Admin only)
-    Route::middleware('permission:manage orders')->group(function () {
-        Route::post('/orders/{order}/refund', [PaymentController::class, 'refund']);
-    });
-    // ============ Coupon Routes ============
 
-    // User routes - view and validate coupons
+
     Route::get('/coupons/available', [CouponController::class, 'available']);
     Route::post('/coupons/validate', [CouponController::class, 'validate']);
 
-    // Admin routes - manage coupons
     Route::middleware('permission:manage coupons')->group(function () {
         Route::get('/coupons', [CouponController::class, 'index']);
         Route::post('/coupons', [CouponController::class, 'store']);
@@ -129,11 +97,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/coupons/{coupon}/toggle', [CouponController::class, 'toggleStatus']);
         Route::get('/coupons/{coupon}/stats', [CouponController::class, 'stats']);
     });
-    // Review routes
+
     Route::post('orders/{order}/review', [App\Http\Controllers\Api\ReviewController::class, 'store']);
     Route::get('orders/{order}/review', [App\Http\Controllers\Api\ReviewController::class, 'show']);
     Route::get('reviews', [App\Http\Controllers\Api\ReviewController::class, 'index']);
-    // Notification routes
+
     Route::prefix('notifications')->group(function () {
         Route::get('/', [NotificationController::class, 'index']);
         Route::get('/unread', [NotificationController::class, 'unread']);
@@ -142,11 +110,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id}', [NotificationController::class, 'destroy']);
     });
 
-    // FCM Token management
     Route::post('/update-fcm-token', [NotificationController::class, 'updateFCMToken']);
 
-    // Admin Test Notification Routes
-    Route::middleware('permission:manage orders')->prefix('admin')->group(function () {
+    Route::middleware('permission:manage all orders')->prefix('admin')->group(function () {
         Route::post('/test-notification', [App\Http\Controllers\Api\Admin\TestNotificationController::class, 'sendTestNotification']);
         Route::post('/send-notification', [App\Http\Controllers\Api\Admin\TestNotificationController::class, 'sendCustomNotification']);
         Route::post('/broadcast-notification', [App\Http\Controllers\Api\Admin\TestNotificationController::class, 'broadcastNotification']);
